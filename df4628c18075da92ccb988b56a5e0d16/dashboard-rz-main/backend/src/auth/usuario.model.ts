@@ -6,6 +6,9 @@ export interface Usuario {
   senha_hash: string;
   role: UsuarioRole;
   ativo: boolean;
+  reset_token: string | null;
+  reset_token_expires: string | null;
+  created_at: string;
 }
 
 export interface AuthUser {

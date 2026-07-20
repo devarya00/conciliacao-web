@@ -12,6 +12,8 @@ import { WorkmonitorModule } from './workmonitor/workmonitor.module';
 import { RelatoriosModule } from './relatorios/relatorios.module';
 import { AuthModule } from './auth/auth.module';
 import { AuthInterceptor } from './auth/data-access/auth.interceptor';
+import { UsuariosModule } from './usuarios/usuarios.module';
+import { ResetSenhaModule } from './reset-senha/reset-senha.module';
 
 registerLocaleData(localePt);
 
@@ -27,6 +29,8 @@ registerLocaleData(localePt);
     ReviewQueueModule,
     WorkmonitorModule,
     RelatoriosModule,
+    UsuariosModule,
+    ResetSenhaModule,
   ],
   providers: [
     { provide: LOCALE_ID, useValue: 'pt-BR' },

@@ -1,39 +1,45 @@
-<ng-container *ngIf="!(auth.usuario$ | async) as ignore; else logado">
-  <app-login-page></app-login-page>
-</ng-container>
+<app-reset-senha *ngIf="tokenRedefinicao; else appNormal" [token]="tokenRedefinicao"></app-reset-senha>
 
-<ng-template #logado>
-  <ng-container *ngIf="auth.isAdmin; else soRelatorios">
-    <nav class="abas">
-      <button [class.ativa]="aba === 'dashboard'" (click)="selecionarAba('dashboard')">Dashboard</button>
-      <button [class.ativa]="aba === 'workmonitor'" (click)="selecionarAba('workmonitor')">Workmonitor</button>
-      <button [class.ativa]="aba === 'arquivos'" (click)="selecionarAba('arquivos')">Planilhas</button>
-      <button [class.ativa]="aba === 'config'" (click)="selecionarAba('config')">Valor do ponto</button>
-      <button [class.ativa]="aba === 'revisao'" (click)="selecionarAba('revisao')">
-        Revisão
-        <span class="badge" *ngIf="pendentesRevisao > 0">{{ pendentesRevisao }}</span>
-      </button>
-      <button [class.ativa]="aba === 'relatorios'" (click)="selecionarAba('relatorios')">Gerador de relatórios</button>
-      <span class="spacer"></span>
-      <span class="usuario">{{ auth.usuario?.email }}</span>
-      <button class="sair" (click)="sair()">Sair</button>
-    </nav>
-
-    <app-produtividade-page *ngIf="aba === 'dashboard'"></app-produtividade-page>
-    <app-workmonitor-page *ngIf="aba === 'workmonitor'"></app-workmonitor-page>
-    <app-arquivos-page *ngIf="aba === 'arquivos'"></app-arquivos-page>
-    <app-config-page *ngIf="aba === 'config'"></app-config-page>
-    <app-review-queue-page *ngIf="aba === 'revisao'"></app-review-queue-page>
-    <app-relatorios-page *ngIf="aba === 'relatorios'"></app-relatorios-page>
+<ng-template #appNormal>
+  <ng-container *ngIf="!(auth.usuario$ | async) as ignore; else logado">
+    <app-login-page></app-login-page>
   </ng-container>
 
-  <ng-template #soRelatorios>
-    <nav class="abas">
-      <button class="ativa">Gerador de relatórios</button>
-      <span class="spacer"></span>
-      <span class="usuario">{{ auth.usuario?.email }}</span>
-      <button class="sair" (click)="sair()">Sair</button>
-    </nav>
-    <app-relatorios-page></app-relatorios-page>
+  <ng-template #logado>
+    <ng-container *ngIf="auth.isAdmin; else soRelatorios">
+      <nav class="abas">
+        <button [class.ativa]="aba === 'dashboard'" (click)="selecionarAba('dashboard')">Dashboard</button>
+        <button [class.ativa]="aba === 'workmonitor'" (click)="selecionarAba('workmonitor')">Workmonitor</button>
+        <button [class.ativa]="aba === 'arquivos'" (click)="selecionarAba('arquivos')">Planilhas</button>
+        <button [class.ativa]="aba === 'config'" (click)="selecionarAba('config')">Valor do ponto</button>
+        <button [class.ativa]="aba === 'revisao'" (click)="selecionarAba('revisao')">
+          Revisão
+          <span class="badge" *ngIf="pendentesRevisao > 0">{{ pendentesRevisao }}</span>
+        </button>
+        <button [class.ativa]="aba === 'relatorios'" (click)="selecionarAba('relatorios')">Gerador de relatórios</button>
+        <button [class.ativa]="aba === 'usuarios'" (click)="selecionarAba('usuarios')">Contas</button>
+        <span class="spacer"></span>
+        <span class="usuario">{{ auth.usuario?.email }}</span>
+        <button class="sair" (click)="sair()">Sair</button>
+      </nav>
+
+      <app-produtividade-page *ngIf="aba === 'dashboard'"></app-produtividade-page>
+      <app-workmonitor-page *ngIf="aba === 'workmonitor'"></app-workmonitor-page>
+      <app-arquivos-page *ngIf="aba === 'arquivos'"></app-arquivos-page>
+      <app-config-page *ngIf="aba === 'config'"></app-config-page>
+      <app-review-queue-page *ngIf="aba === 'revisao'"></app-review-queue-page>
+      <app-relatorios-page *ngIf="aba === 'relatorios'"></app-relatorios-page>
+      <app-usuarios-page *ngIf="aba === 'usuarios'"></app-usuarios-page>
+    </ng-container>
+
+    <ng-template #soRelatorios>
+      <nav class="abas">
+        <button class="ativa">Gerador de relatórios</button>
+        <span class="spacer"></span>
+        <span class="usuario">{{ auth.usuario?.email }}</span>
+        <button class="sair" (click)="sair()">Sair</button>
+      </nav>
+      <app-relatorios-page></app-relatorios-page>
+    </ng-template>
   </ng-template>
 </ng-template>

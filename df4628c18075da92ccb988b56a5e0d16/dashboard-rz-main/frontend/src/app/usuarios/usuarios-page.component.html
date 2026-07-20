@@ -1,0 +1,64 @@
+<div class="pagina">
+  <div class="cartao envio">
+    <h3>Criar conta</h3>
+    <p class="ajuda">
+      A conta é criada sem senha utilizável — a pessoa define a própria senha ao abrir o link
+      gerado abaixo (válido por 24h).
+    </p>
+    <div class="form-envio">
+      <input type="email" placeholder="email@rezende.com.br" [(ngModel)]="email" [disabled]="criando" />
+      <select [(ngModel)]="role" [disabled]="criando">
+        <option value="user">Funcionário (gerador de relatórios)</option>
+        <option value="admin">Admin (BI completo)</option>
+      </select>
+      <button class="criar" [disabled]="!email || criando" (click)="criar()">
+        {{ criando ? 'Criando…' : 'Criar e gerar link' }}
+      </button>
+    </div>
+    <p class="erro" *ngIf="erro">{{ erro }}</p>
+  </div>
+
+  <div class="cartao lista">
+    <h3>Contas</h3>
+    <table class="tabela" *ngIf="usuarios.length; else vazio">
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th>Criada em</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <ng-container *ngFor="let u of usuarios">
+          <tr>
+            <td>{{ u.email }}</td>
+            <td>{{ u.role === 'admin' ? 'Admin' : 'Funcionário' }}</td>
+            <td>
+              <span class="badge" [class.ativo]="u.ativo" [class.inativo]="!u.ativo">
+                {{ u.ativo ? 'ativa' : 'inativa' }}
+              </span>
+            </td>
+            <td>{{ u.created_at | date: 'dd/MM/yyyy' }}</td>
+            <td>
+              <button class="gerar-link" (click)="gerarLink(u)">Gerar link de redefinição</button>
+            </td>
+          </tr>
+          <tr class="linha-link" *ngIf="linkGeradoParaId === u.id">
+            <td colspan="5">
+              <div class="caixa-link">
+                <input type="text" readonly [value]="linkGerado" (click)="$any($event.target).select()" />
+                <button (click)="copiarLink()">{{ copiado ? 'Copiado!' : 'Copiar' }}</button>
+                <span class="expira">expira em {{ linkExpiraEm | date: 'dd/MM/yyyy HH:mm' }}</span>
+              </div>
+            </td>
+          </tr>
+        </ng-container>
+      </tbody>
+    </table>
+    <ng-template #vazio>
+      <p class="vazio">Nenhuma conta criada ainda.</p>
+    </ng-template>
+  </div>
+</div>

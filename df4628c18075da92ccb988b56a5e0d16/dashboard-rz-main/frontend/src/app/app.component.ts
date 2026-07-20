@@ -8,8 +8,11 @@ import { AuthService } from './auth/data-access/auth.service';
   styleUrls: ['./app.component.scss'],
 })
 export class AppComponent implements OnInit {
-  aba: 'dashboard' | 'workmonitor' | 'arquivos' | 'config' | 'revisao' | 'relatorios' = 'dashboard';
+  aba: 'dashboard' | 'workmonitor' | 'arquivos' | 'config' | 'revisao' | 'relatorios' | 'usuarios' = 'dashboard';
   pendentesRevisao = 0;
+
+  /** ?reset=TOKEN na URL — tela de redefinição de senha é pública, sem router mesmo (link externo) */
+  readonly tokenRedefinicao = new URLSearchParams(window.location.search).get('reset');
 
   constructor(
     private readonly reviewQueueService: ReviewQueueService,
@@ -23,7 +26,9 @@ export class AppComponent implements OnInit {
     });
   }
 
-  selecionarAba(aba: 'dashboard' | 'workmonitor' | 'arquivos' | 'config' | 'revisao' | 'relatorios'): void {
+  selecionarAba(
+    aba: 'dashboard' | 'workmonitor' | 'arquivos' | 'config' | 'revisao' | 'relatorios' | 'usuarios',
+  ): void {
     this.aba = aba;
     if (aba === 'revisao') this.atualizarContagemRevisao();
   }

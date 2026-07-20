@@ -1,0 +1,30 @@
+<div class="login-wrap">
+  <div class="login-card" *ngIf="!sucesso; else feito">
+    <h1>Definir senha</h1>
+    <p class="subtitulo">Escolha a senha da sua conta</p>
+
+    <form (ngSubmit)="redefinir()">
+      <label>
+        Nova senha
+        <input type="password" name="novaSenha" [(ngModel)]="novaSenha" autocomplete="new-password" required minlength="8" />
+      </label>
+
+      <label>
+        Confirmar senha
+        <input type="password" name="confirmarSenha" [(ngModel)]="confirmarSenha" autocomplete="new-password" required />
+      </label>
+
+      <p class="erro" *ngIf="erro">{{ erro }}</p>
+
+      <button type="submit" [disabled]="enviando">{{ enviando ? 'Salvando…' : 'Salvar senha' }}</button>
+    </form>
+  </div>
+
+  <ng-template #feito>
+    <div class="login-card">
+      <h1>Senha definida</h1>
+      <p class="subtitulo">Sua conta já pode entrar com a nova senha.</p>
+      <button (click)="irParaLogin()">Ir para o login</button>
+    </div>
+  </ng-template>
+</div>

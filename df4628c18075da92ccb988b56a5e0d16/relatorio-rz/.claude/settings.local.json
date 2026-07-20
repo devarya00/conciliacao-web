@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c \"import pdfplumber\")",
+      "Bash(python3 -c \"import fitz; print\\('pymupdf ok'\\)\")",
+      "Bash(pdfinfo 'Balancete jovane.pdf')",
+      "Bash(pdfinfo 'Empresa 57 - JOVANE ZILIO FABRIS.pdf.pdf')",
+      "Bash(pdftotext -layout 'Balancete jovane.pdf' -)"
+    ]
+  }
+}

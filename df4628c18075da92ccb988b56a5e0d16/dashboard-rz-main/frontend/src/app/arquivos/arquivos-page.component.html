@@ -1,0 +1,71 @@
+<div class="pagina">
+  <div class="cartao envio">
+    <h3>Enviar planilha</h3>
+    <div class="form-envio">
+      <select [(ngModel)]="origemSelecionada">
+        <option *ngFor="let o of origens" [value]="o">{{ origemLabel[o] }}</option>
+      </select>
+      <label class="botao-arquivo">
+        {{ enviando ? 'Enviando...' : 'Escolher arquivo (.xlsx/.csv)' }}
+        <input type="file" accept=".xlsx,.xls,.csv" [disabled]="enviando" (change)="onArquivoEscolhido($event)" />
+      </label>
+    </div>
+    <p class="erro" *ngIf="erro">{{ erro }}</p>
+  </div>
+
+  <div class="cartao lista">
+    <div class="cabecalho-lista">
+      <h3>Planilhas enviadas</h3>
+      <div class="filtro-periodo">
+        <label>
+          Período de
+          <input type="date" [(ngModel)]="dataInicial" (change)="carregar()" />
+        </label>
+        <label>
+          até
+          <input type="date" [(ngModel)]="dataFinal" (change)="carregar()" />
+        </label>
+        <button class="limpar" *ngIf="dataInicial || dataFinal" (click)="limparFiltro()">Limpar</button>
+      </div>
+    </div>
+    <p class="ajuda" *ngIf="dataInicial || dataFinal">
+      Mostrando planilhas cujos dados (data de entrega/prazo técnico, S3D; data, Onvio/Workmonitor) cobrem esse período — não a data de envio.
+    </p>
+    <table class="tabela" *ngIf="arquivos.length; else vazio">
+      <thead>
+        <tr>
+          <th>Arquivo</th>
+          <th>Origem</th>
+          <th>Status</th>
+          <th>Registros</th>
+          <th>Período dos dados</th>
+          <th>Tamanho</th>
+          <th>Enviado em</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let a of arquivos">
+          <td>{{ a.nomeOriginal }}</td>
+          <td>{{ origemLabel[a.origem] }}</td>
+          <td>
+            <span class="badge" [class.processado]="a.status === 'processado'" [class.erro]="a.status === 'erro'" [class.pendente]="a.status === 'pendente'">
+              {{ a.status }}
+            </span>
+            <span class="msg-erro" *ngIf="a.mensagemErro" [title]="a.mensagemErro">⚠</span>
+          </td>
+          <td>{{ a.registros }}</td>
+          <td>{{ formatarPeriodo(a) }}</td>
+          <td>{{ formatarTamanho(a.tamanhoBytes) }}</td>
+          <td>{{ a.enviadoEm | date: 'dd/MM/yyyy HH:mm' }}</td>
+          <td><button class="excluir" (click)="excluir(a)">Excluir</button></td>
+        </tr>
+      </tbody>
+    </table>
+    <ng-template #vazio>
+      <p class="vazio">
+        {{ dataInicial || dataFinal ? 'Nenhuma planilha com dados nesse período.' : 'Nenhuma planilha enviada ainda.' }}
+      </p>
+    </ng-template>
+  </div>
+</div>

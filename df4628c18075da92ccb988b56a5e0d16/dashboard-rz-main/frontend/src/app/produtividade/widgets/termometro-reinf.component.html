@@ -1,0 +1,7 @@
+<div class="cartao widget">
+  <h3>Termômetro RE-INF</h3>
+  <div echarts [options]="options" class="grafico"></div>
+  <p class="legenda" *ngIf="reinf">
+    Fechados: {{ reinf.fechados }} · A fechar: {{ reinf.aFechar }}
+  </p>
+</div>

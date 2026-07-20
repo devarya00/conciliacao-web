@@ -1,0 +1,198 @@
+<div class="pagina">
+  <div class="cartao topo">
+    <h3>Fila de revisão de funcionários</h3>
+    <p class="ajuda">
+      Nomes que vieram de planilhas de desempenho e não bateram automaticamente com
+      nenhum funcionário conhecido (nem exato, nem similaridade ≥ 88% no mesmo
+      departamento). Aprovar já grava as linhas pendentes em fact_performance e o
+      funcionário passa a aparecer certo nos gráficos a partir de agora.
+    </p>
+    <div class="filtro">
+      <input type="text" placeholder="Filtrar por departamento" [(ngModel)]="filtroDepartamento" (keyup.enter)="carregar()" />
+      <button (click)="carregar()">Filtrar</button>
+      <span class="contagem">{{ contagem.grupos }} pendente(s) ({{ contagem.linhas }} linha(s))</span>
+    </div>
+    <p class="mensagem" *ngIf="ultimaMensagem">{{ ultimaMensagem }}</p>
+  </div>
+
+  <p class="carregando" *ngIf="carregando">Carregando...</p>
+
+  <div class="vazio" *ngIf="!carregando && linhas.length === 0">
+    Nenhum item pendente de revisão. 🎉
+  </div>
+
+  <div class="cartao item" *ngFor="let linha of linhas">
+    <div class="cabecalho">
+      <div>
+        <strong>{{ linha.grupo.rawName }}</strong>
+        <span class="dept" *ngIf="linha.grupo.rawDept">— {{ linha.grupo.rawDept }}</span>
+        <span class="dept sem-dept" *ngIf="!linha.grupo.rawDept">— departamento desconhecido</span>
+      </div>
+      <div class="meta">
+        {{ linha.grupo.pendentes }} linha(s) pendente(s) · {{ linha.grupo.sourceFiles.join(', ') }}
+      </div>
+    </div>
+
+    <div class="resolucao" *ngIf="!linha.modoNovoFuncionario">
+      <label>
+        Funcionário canônico
+        <select [(ngModel)]="linha.employeeIdSelecionado" [disabled]="linha.carregandoSugestoes || linha.sugestoes.length === 0">
+          <option *ngIf="linha.carregandoSugestoes" [ngValue]="null">Carregando sugestões...</option>
+          <option *ngIf="!linha.carregandoSugestoes && linha.sugestoes.length === 0" [ngValue]="null">Nenhuma sugestão encontrada</option>
+          <option *ngFor="let s of linha.sugestoes" [ngValue]="s.employeeId">{{ s.canonicalName }} ({{ s.score }}%)</option>
+        </select>
+      </label>
+      <button class="link" (click)="alternarNovoFuncionario(linha)">+ Criar novo funcionário</button>
+    </div>
+
+    <div class="resolucao novo" *ngIf="linha.modoNovoFuncionario">
+      <label>
+        Nome canônico
+        <input type="text" [(ngModel)]="linha.novoNome" />
+      </label>
+      <label>
+        Departamento
+        <input type="text" [(ngModel)]="linha.novoDepartamento" />
+      </label>
+      <button class="link" (click)="alternarNovoFuncionario(linha)">Cancelar, usar sugestões</button>
+    </div>
+
+    <p class="erro" *ngIf="linha.erro">{{ linha.erro }}</p>
+
+    <div class="acoes">
+      <button class="botao-aprovar" [disabled]="linha.processando" (click)="aprovar(linha)">
+        {{ linha.processando ? 'Processando...' : 'Aprovar' }}
+      </button>
+      <button class="botao-rejeitar" [disabled]="linha.processando" (click)="rejeitar(linha)">Rejeitar</button>
+    </div>
+  </div>
+
+  <div class="cartao topo">
+    <h3>Responsáveis S3D não mapeados</h3>
+    <p class="ajuda">
+      Variações de "Responsável entrega" do S3D que não bateram exato com nenhum
+      funcionário conhecido em dim_responsavel (ex.: apelido, nome com departamento
+      junto, ex-funcionário). Vincular já reprocessa as entregas pendentes desse
+      nome e ele passa a contar certo no ranking por pessoa. Descartar tira do
+      ranking por pessoa, mas a tarefa continua nos totais gerais do dashboard —
+      tarefa realizada é tarefa realizada, só deixa de ser atribuída a alguém.
+    </p>
+  </div>
+
+  <p class="carregando" *ngIf="carregandoResponsaveis">Carregando...</p>
+
+  <div class="vazio" *ngIf="!carregandoResponsaveis && linhasResponsaveis.length === 0">
+    Nenhuma variação pendente de revisão. 🎉
+  </div>
+
+  <div class="cartao item" *ngFor="let linha of linhasResponsaveis">
+    <div class="cabecalho">
+      <div>
+        <strong>{{ linha.item.rawResponsavelS3d }}</strong>
+      </div>
+      <div class="meta">{{ linha.item.ocorrencias }} entrega(s) pendente(s) por causa dessa variação</div>
+    </div>
+
+    <div class="resolucao" *ngIf="linha.nomeCanonicoSelecionado !== NOVO_FUNCIONARIO">
+      <label>
+        Vincular a
+        <select [(ngModel)]="linha.nomeCanonicoSelecionado">
+          <option value="">Escolha um funcionário...</option>
+          <option *ngFor="let a of ativos" [value]="a.nomeCanonico">{{ a.nomeCanonico }} — {{ a.departamento || 'sem depto' }}</option>
+          <option [value]="NOVO_FUNCIONARIO">+ Criar novo funcionário</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="resolucao novo" *ngIf="linha.nomeCanonicoSelecionado === NOVO_FUNCIONARIO">
+      <label>
+        Nome canônico
+        <input type="text" [(ngModel)]="linha.novoNome" />
+      </label>
+      <label>
+        Departamento
+        <input type="text" [(ngModel)]="linha.novoDepartamento" />
+      </label>
+      <button class="link" (click)="linha.nomeCanonicoSelecionado = ''">Cancelar, escolher existente</button>
+    </div>
+
+    <p class="erro" *ngIf="linha.erro">{{ linha.erro }}</p>
+
+    <div class="acoes">
+      <button class="botao-aprovar" [disabled]="linha.processando" (click)="vincularResponsavel(linha)">
+        {{ linha.processando ? 'Processando...' : 'Vincular' }}
+      </button>
+      <button class="botao-rejeitar" [disabled]="linha.processando" (click)="descartarResponsavel(linha)">Descartar</button>
+    </div>
+  </div>
+
+  <div class="cartao topo">
+    <h3>Funcionários</h3>
+    <p class="ajuda">
+      Marque como ex-funcionário quem já saiu — some do ranking e dos gráficos por
+      pessoa em toda a tela (Dashboard e Workmonitor). Os registros históricos não
+      são apagados, só param de ser atribuídos a essa pessoa.
+      <br />
+      Se o mesmo funcionário aparece duplicado (nome divergente, apelido, cargo
+      colado no nome) use "Mesclar com" — junta todo o histórico no funcionário
+      certo (soma nos gráficos) e marca o duplicado como ex-funcionário.
+    </p>
+    <div class="filtro">
+      <input type="text" placeholder="Filtrar por nome" [(ngModel)]="filtroNomeColaborador" />
+    </div>
+  </div>
+
+  <p class="carregando" *ngIf="carregandoColaboradores">Carregando...</p>
+
+  <div class="cartao">
+    <table class="tabela-colaboradores" *ngIf="colaboradoresFiltrados.length">
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Departamento</th>
+          <th>Status</th>
+          <th></th>
+          <th>Mesclar com</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let c of colaboradoresFiltrados" [class.inativo]="c.status === 'inativo'">
+          <td>{{ c.nome }}</td>
+          <td>{{ c.departamento || '—' }}</td>
+          <td>
+            <span class="badge-status" [class.ativo]="c.status === 'ativo'" [class.inativo]="c.status === 'inativo'">
+              {{ c.status }}
+            </span>
+          </td>
+          <td>
+            <button
+              class="link"
+              [disabled]="processandoColaboradorId === c.id"
+              (click)="alternarStatusColaborador(c)"
+            >
+              {{ c.status === 'ativo' ? 'Marcar ex-funcionário' : 'Marcar ativo' }}
+            </button>
+          </td>
+          <td class="col-mesclar">
+            <select [(ngModel)]="mesclarAlvoPorId[c.id]" [disabled]="c.status === 'inativo'">
+              <option [ngValue]="null">— escolher —</option>
+              <option *ngFor="let alvo of colaboradores" [ngValue]="alvo.id" [disabled]="alvo.id === c.id || alvo.status === 'inativo'">
+                {{ alvo.nome }}
+              </option>
+            </select>
+            <button
+              class="link"
+              [disabled]="!mesclarAlvoPorId[c.id] || c.status === 'inativo' || processandoColaboradorId === c.id"
+              (click)="mesclarColaborador(c)"
+            >
+              Mesclar
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="vazio" *ngIf="!carregandoColaboradores && colaboradoresFiltrados.length === 0">
+      Nenhum funcionário encontrado.
+    </p>
+  </div>
+</div>

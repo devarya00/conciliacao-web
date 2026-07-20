@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.env
+.angular/
+
+# dados reais (planilhas/PDFs/db com dados de colaboradores e empresas) —
+# nunca versionar, só a estrutura de pastas via .gitkeep
+backend/data/**
+!backend/data/**/
+!backend/data/**/.gitkeep
+
+fontes/**/*.csv
+fontes/**/*.xlsx
+fontes/**/*.xls
+
+gestao-entregas-package/*.csv
+gestao-entregas-package/*.db

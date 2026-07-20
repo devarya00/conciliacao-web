@@ -1,0 +1,57 @@
+<div class="pagina">
+  <div class="cartao envio">
+    <h3>Gerar relatório gerencial</h3>
+    <p class="ajuda">Envie os PDFs do Domínio (Balancete + Resumo por Acumulador) exportados da mesma competência.</p>
+    <div class="form-envio">
+      <input type="text" placeholder="Nome da empresa" [(ngModel)]="nomeEmpresa" [disabled]="gerando" />
+
+      <label class="botao-arquivo">
+        {{ balancete ? balancete.name : 'Balancete (.pdf)' }}
+        <input type="file" accept=".pdf" [disabled]="gerando" (change)="onBalanceteEscolhido($event)" />
+      </label>
+
+      <label class="botao-arquivo">
+        {{ resumo ? resumo.name : 'Resumo por acumulador (.pdf)' }}
+        <input type="file" accept=".pdf" [disabled]="gerando" (change)="onResumoEscolhido($event)" />
+      </label>
+
+      <button class="gerar" [disabled]="!podeGerar()" (click)="gerar()">
+        {{ gerando ? 'Gerando…' : 'Gerar relatório' }}
+      </button>
+    </div>
+    <p class="erro" *ngIf="erro">{{ erro }}</p>
+  </div>
+
+  <div class="cartao lista">
+    <h3>Relatórios gerados</h3>
+    <table class="tabela" *ngIf="relatorios.length; else vazio">
+      <thead>
+        <tr>
+          <th>Empresa</th>
+          <th>Status</th>
+          <th>Gerado em</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let r of relatorios">
+          <td>{{ r.nome_empresa }}</td>
+          <td>
+            <span class="badge" [class.concluido]="r.status === 'concluido'" [class.erro]="r.status === 'erro'" [class.processando]="r.status === 'processando'">
+              {{ r.status }}
+            </span>
+            <span class="msg-erro" *ngIf="r.erro_msg" [title]="r.erro_msg">⚠</span>
+          </td>
+          <td>{{ r.created_at | date: 'dd/MM/yyyy HH:mm' }}</td>
+          <td class="acoes">
+            <button class="baixar" *ngIf="r.status === 'concluido'" (click)="baixar(r)">Baixar .xlsx</button>
+            <button class="excluir" (click)="excluir(r)">Excluir</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <ng-template #vazio>
+      <p class="vazio">Nenhum relatório gerado ainda.</p>
+    </ng-template>
+  </div>
+</div>

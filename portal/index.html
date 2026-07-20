@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portal Rezende Contabilidade</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    background: linear-gradient(180deg, #0b3d91 0%, #123a8a 40%, #1e56c9 100%);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    padding: 24px 0;
+  }
+  .sidebar .brand {
+    padding: 0 20px 24px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.15);
+    margin-bottom: 16px;
+  }
+  .sidebar .brand h1 {
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+  .sidebar .brand span {
+    display: block;
+    font-size: 12px;
+    color: rgba(255,255,255,0.65);
+    margin-top: 4px;
+  }
+  .sidebar nav {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 0 12px;
+  }
+  .sidebar button.nav-item {
+    all: unset;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    color: rgba(255,255,255,0.85);
+    font-size: 14px;
+    font-weight: 500;
+    transition: background 0.15s ease;
+  }
+  .sidebar button.nav-item:hover {
+    background: rgba(255,255,255,0.10);
+  }
+  .sidebar button.nav-item.active {
+    background: rgba(255,255,255,0.18);
+    color: #fff;
+  }
+  .sidebar button.nav-item .icon {
+    width: 18px;
+    text-align: center;
+    font-size: 15px;
+  }
+  .sidebar .footer {
+    padding: 12px 20px 0 20px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+    border-top: 1px solid rgba(255,255,255,0.15);
+    margin-top: 16px;
+  }
+
+  /* Content */
+  .content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #f4f6fb;
+  }
+  .topbar {
+    height: 56px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    background: #fff;
+    border-bottom: 1px solid #e2e6ef;
+  }
+  .topbar h2 {
+    font-size: 16px;
+    color: #1a1a2e;
+  }
+  .topbar a.external {
+    font-size: 13px;
+    color: #1e56c9;
+    text-decoration: none;
+    font-weight: 500;
+  }
+  .topbar a.external:hover { text-decoration: underline; }
+
+  .frame-wrap {
+    flex: 1;
+    position: relative;
+  }
+  iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: none;
+  }
+  iframe.active { display: block; }
+
+  .placeholder {
+    display: none;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 12px;
+    color: #5b6470;
+    text-align: center;
+    padding: 40px;
+  }
+  .placeholder.active { display: flex; }
+  .placeholder code {
+    background: #e9edf6;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 13px;
+  }
+</style>
+</head>
+<body>
+
+  <aside class="sidebar">
+    <div class="brand">
+      <h1>Rezende Contabilidade</h1>
+      <span>Portal de Ferramentas</span>
+    </div>
+    <nav>
+      <button class="nav-item active" data-target="dashboard">
+        <span class="icon">&#128202;</span> Dashboard de Produtividade
+      </button>
+      <button class="nav-item" data-target="relatorio">
+        <span class="icon">&#128196;</span> Relatório Gerencial
+      </button>
+    </nav>
+    <div class="footer">v1.0 &middot; portal local</div>
+  </aside>
+
+  <main class="content">
+    <div class="topbar">
+      <h2 id="topbar-title">Dashboard de Produtividade</h2>
+      <a class="external" id="open-new-tab" href="http://localhost:4200" target="_blank" rel="noopener">Abrir em nova aba &#8599;</a>
+    </div>
+
+    <div class="frame-wrap">
+      <iframe id="frame-dashboard" class="active"></iframe>
+      <iframe id="frame-relatorio" src="../relatorio-rz/relatorio-gerencial.html"></iframe>
+
+      <div class="placeholder" id="placeholder-dashboard">
+        <div>Dashboard não respondeu em <code>localhost:4200</code>.</div>
+        <div>Suba o frontend: <code>cd dashboard-rz-main/frontend &amp;&amp; npm start</code> (e o backend em <code>:3001</code>).</div>
+      </div>
+    </div>
+  </main>
+
+<script>
+  const tools = {
+    dashboard: {
+      title: "Dashboard de Produtividade",
+      frame: document.getElementById("frame-dashboard"),
+      link: "http://localhost:4200",
+    },
+    relatorio: {
+      title: "Relatório Gerencial",
+      frame: document.getElementById("frame-relatorio"),
+      link: "../relatorio-rz/relatorio-gerencial.html",
+    },
+  };
+
+  const buttons = document.querySelectorAll(".nav-item");
+  const title = document.getElementById("topbar-title");
+  const openLink = document.getElementById("open-new-tab");
+  const placeholderDashboard = document.getElementById("placeholder-dashboard");
+
+  function activate(key) {
+    buttons.forEach(b => b.classList.toggle("active", b.dataset.target === key));
+    Object.entries(tools).forEach(([k, t]) => t.frame.classList.toggle("active", k === key));
+    title.textContent = tools[key].title;
+    openLink.href = tools[key].link;
+    placeholderDashboard.classList.toggle("active", false);
+  }
+
+  buttons.forEach(b => b.addEventListener("click", () => activate(b.dataset.target)));
+
+  // sonda o dashboard (servidor dev) sem travar a página caso esteja fora do ar
+  const dashFrame = tools.dashboard.frame;
+  const DASH_URL = "http://localhost:4200";
+
+  function probeDashboard() {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 1500);
+    fetch(DASH_URL, { mode: "no-cors", signal: ctrl.signal })
+      .then(() => {
+        clearTimeout(timer);
+        dashFrame.src = DASH_URL;
+        placeholderDashboard.classList.remove("active");
+      })
+      .catch(() => {
+        clearTimeout(timer);
+        placeholderDashboard.classList.add("active");
+      });
+  }
+
+  probeDashboard();
+  document.querySelector('[data-target="dashboard"]').addEventListener("click", () => {
+    if (!dashFrame.src) probeDashboard();
+  });
+</script>
+
+</body>
+</html>

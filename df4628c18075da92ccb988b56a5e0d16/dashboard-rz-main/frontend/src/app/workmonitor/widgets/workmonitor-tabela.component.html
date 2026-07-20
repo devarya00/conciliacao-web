@@ -1,0 +1,26 @@
+<div class="cartao widget">
+  <h3>Colaboradores</h3>
+  <table class="tabela" *ngIf="linhas.length; else vazio">
+    <thead>
+      <tr>
+        <th>Nome</th>
+        <th>Jornada</th>
+        <th>Captadas</th>
+        <th>% Produtivo</th>
+        <th>Score</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let l of linhas">
+        <td>{{ l.nome }}</td>
+        <td>{{ formatarHms(l.jornadaS) }}</td>
+        <td>{{ formatarHms(l.captadasS) }}</td>
+        <td>{{ l.percentualProdutivo | number: '1.2-2' }}%</td>
+        <td>{{ l.score !== null ? (l.score | number: '1.2-2') : '—' }}</td>
+      </tr>
+    </tbody>
+  </table>
+  <ng-template #vazio>
+    <p class="vazio">Nenhum dado de Workmonitor no período.</p>
+  </ng-template>
+</div>

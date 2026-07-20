@@ -1,0 +1,33 @@
+:root {
+  --cor-fundo: #f4f6fb;
+  --cor-cartao: #ffffff;
+  --cor-azul: #5aa9ff;
+  --cor-verde-limao: #8fe04a;
+  --cor-roxo: #9b7bff;
+  --cor-rosa: #ff7ab2;
+  --cartao-radius: 18px;
+  --cartao-shadow: 0 4px 16px rgba(30, 41, 59, 0.06);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--cor-fundo);
+  font-family: 'Inter', 'Segoe UI', Roboto, Arial, sans-serif;
+  color: #1e293b;
+}
+
+.cartao {
+  background: var(--cor-cartao);
+  border-radius: var(--cartao-radius);
+  box-shadow: var(--cartao-shadow);
+  padding: 20px;
+}

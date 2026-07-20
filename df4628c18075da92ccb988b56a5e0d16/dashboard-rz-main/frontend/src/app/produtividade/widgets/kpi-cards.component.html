@@ -1,0 +1,54 @@
+<div class="kpi-grid">
+  <div class="kpi cartao">
+    <div class="kpi-icone azul">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="4" y="3" width="16" height="18"></rect>
+        <path d="M9 21v-4h6v4"></path>
+        <path d="M9 7h.01M15 7h.01M9 11h.01M15 11h.01M9 15h.01M15 15h.01"></path>
+      </svg>
+    </div>
+    <div class="kpi-texto">
+      <span class="kpi-label">Empresas atendidas</span>
+      <span class="kpi-valor">{{ kpi ? (kpi.empresas | number) : '—' }}</span>
+    </div>
+  </div>
+
+  <div class="kpi cartao">
+    <div class="kpi-icone aqua">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 11l3 3L22 4"></path>
+        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+      </svg>
+    </div>
+    <div class="kpi-texto">
+      <span class="kpi-label">Tarefas realizadas</span>
+      <span class="kpi-valor">{{ kpi ? (kpi.tarefas | number) : '—' }}</span>
+    </div>
+  </div>
+
+  <div class="kpi cartao">
+    <div class="kpi-icone bom">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="9"></circle>
+        <path d="M8.5 12.5l2.5 2.5 4.5-5"></path>
+      </svg>
+    </div>
+    <div class="kpi-texto">
+      <span class="kpi-label">RE-INF fechados</span>
+      <span class="kpi-valor">{{ kpi ? (kpi.reinfFechados | number) : '—' }}</span>
+    </div>
+  </div>
+
+  <div class="kpi cartao">
+    <div class="kpi-icone alerta">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="9"></circle>
+        <path d="M12 7v5.5l3.5 2"></path>
+      </svg>
+    </div>
+    <div class="kpi-texto">
+      <span class="kpi-label">RE-INF pendentes</span>
+      <span class="kpi-valor">{{ kpi ? (kpi.reinfPendentes | number) : '—' }}</span>
+    </div>
+  </div>
+</div>

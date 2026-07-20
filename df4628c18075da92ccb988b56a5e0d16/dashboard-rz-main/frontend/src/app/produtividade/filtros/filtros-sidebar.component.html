@@ -1,0 +1,39 @@
+<aside class="sidebar cartao">
+  <h3>Filtros</h3>
+
+  <label>
+    Data inicial
+    <input type="date" [(ngModel)]="dataInicial" (change)="emitir()" />
+  </label>
+
+  <label>
+    Data final
+    <input type="date" [(ngModel)]="dataFinal" (change)="emitir()" />
+  </label>
+
+  <label class="toggle" *ngIf="mostrarReinf">
+    <input type="checkbox" [(ngModel)]="somenteReinf" (change)="emitir()" />
+    Somente RE-INF
+  </label>
+
+  <label class="toggle" title="Ligado: reenvios/atualizações da mesma obrigação contam uma vez (última ocorrência vence). Desligado: conta cada repetição, incluindo execuções diárias de tarefas recorrentes.">
+    <input type="checkbox" [(ngModel)]="dedup" (change)="emitir()" />
+    Deduplicar reenvios
+  </label>
+
+  <label>
+    Departamento
+    <select [(ngModel)]="departamento" (change)="emitir()">
+      <option value="Todos">Todos</option>
+      <option *ngFor="let d of opcoes?.departamentos" [value]="d">{{ d }}</option>
+    </select>
+  </label>
+
+  <label>
+    Colaborador
+    <select [(ngModel)]="colaborador" (change)="emitir()">
+      <option value="Todos">Todos</option>
+      <option *ngFor="let c of opcoes?.colaboradores" [value]="c.nome">{{ c.nome }}</option>
+    </select>
+  </label>
+</aside>

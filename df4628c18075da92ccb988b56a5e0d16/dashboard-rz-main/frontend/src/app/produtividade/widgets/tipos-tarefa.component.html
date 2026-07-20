@@ -1,0 +1,24 @@
+<div class="cartao widget">
+  <h3>Detalhamento de tarefas</h3>
+  <div class="conteudo">
+    <div echarts [options]="options" class="grafico"></div>
+    <div class="tabela-scroll">
+      <table class="tabela">
+        <thead>
+          <tr>
+            <th>Obrigação</th>
+            <th>Volume</th>
+            <th>%</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let t of tipos">
+            <td>{{ t.obrigacao }}</td>
+            <td>{{ t.volume }}</td>
+            <td>{{ t.percentual }}%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

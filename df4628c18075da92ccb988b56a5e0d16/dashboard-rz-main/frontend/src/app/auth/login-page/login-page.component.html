@@ -1,0 +1,20 @@
+<div class="login-wrap">
+  <form class="login-card" (ngSubmit)="entrar()">
+    <h1>Dashboard de Produtividade</h1>
+    <p class="subtitulo">Acesso restrito</p>
+
+    <label>
+      Email
+      <input type="email" name="email" [(ngModel)]="email" autocomplete="username" required />
+    </label>
+
+    <label>
+      Senha
+      <input type="password" name="senha" [(ngModel)]="senha" autocomplete="current-password" required />
+    </label>
+
+    <p class="erro" *ngIf="erro">{{ erro }}</p>
+
+    <button type="submit" [disabled]="carregando">{{ carregando ? 'Entrando…' : 'Entrar' }}</button>
+  </form>
+</div>

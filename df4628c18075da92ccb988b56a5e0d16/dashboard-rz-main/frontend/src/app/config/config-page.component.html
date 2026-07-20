@@ -1,0 +1,47 @@
+<div class="pagina">
+  <div class="cartao envio">
+    <h3>Valor do ponto</h3>
+    <p class="ajuda">
+      Quanto vale 1 ponto (R$) no cálculo do prêmio. Cada mês vale o valor mais
+      recente cadastrado até aquele mês — cadastre uma linha nova só quando o
+      valor mudar.
+    </p>
+    <div class="form-envio">
+      <select [(ngModel)]="mesSelecionado">
+        <option [ngValue]="null" disabled>Mês</option>
+        <option *ngFor="let m of meses" [ngValue]="m.valor">{{ m.nome }}</option>
+      </select>
+      <input type="number" placeholder="Ano" [(ngModel)]="anoSelecionado" />
+      <input type="number" step="0.01" min="0" placeholder="R$ por ponto" [(ngModel)]="valorInformado" />
+      <button
+        class="botao-salvar"
+        [disabled]="salvando || !mesSelecionado || !anoSelecionado || valorInformado === null"
+        (click)="salvar()"
+      >
+        {{ salvando ? 'Salvando...' : 'Salvar' }}
+      </button>
+    </div>
+    <p class="erro" *ngIf="erro">{{ erro }}</p>
+  </div>
+
+  <div class="cartao lista">
+    <h3>Histórico</h3>
+    <table class="tabela" *ngIf="historico.length; else vazio">
+      <thead>
+        <tr>
+          <th>Vigência a partir de</th>
+          <th>Valor por ponto</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let h of historico">
+          <td>{{ formatarCompetencia(h.competencia) }}</td>
+          <td>{{ h.valor | currency: 'BRL' }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <ng-template #vazio>
+      <p class="vazio">Nenhum valor cadastrado ainda — prêmio fica em R$ 0,00 até cadastrar o primeiro.</p>
+    </ng-template>
+  </div>
+</div>

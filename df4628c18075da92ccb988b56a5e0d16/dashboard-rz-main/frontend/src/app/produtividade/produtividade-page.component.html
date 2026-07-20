@@ -1,0 +1,19 @@
+<div class="pagina">
+  <app-filtros-sidebar [opcoes]="opcoesFiltro" (filtroChange)="onFiltroChange($event)"></app-filtros-sidebar>
+
+  <div class="conteudo">
+    <p class="aviso-erro" *ngIf="erroCarregando">
+      Falha ao atualizar os dados. Tentando de novo no próximo filtro.
+    </p>
+    <app-kpi-cards [kpi]="kpi"></app-kpi-cards>
+
+    <app-ranking-funcionarios [ranking]="ranking"></app-ranking-funcionarios>
+
+    <div class="grid-2">
+      <app-tipos-tarefa [tipos]="tiposTarefa"></app-tipos-tarefa>
+      <app-termometro-reinf [reinf]="reinf"></app-termometro-reinf>
+    </div>
+
+    <app-pontuacao-tabela></app-pontuacao-tabela>
+  </div>
+</div>

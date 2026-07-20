@@ -1,0 +1,45 @@
+<div class="cartao widget">
+  <div class="cabecalho">
+    <h3>Pontuação por funcionário</h3>
+    <div class="filtro-periodo">
+      <select [(ngModel)]="mesSelecionado" (ngModelChange)="carregar()">
+        <option *ngFor="let m of meses" [ngValue]="m.valor">{{ m.nome }}</option>
+      </select>
+      <input type="number" [(ngModel)]="anoSelecionado" (ngModelChange)="carregar()" />
+    </div>
+  </div>
+  <div class="tabela-scroll">
+    <table class="tabela">
+      <thead>
+        <tr>
+          <th>Funcionário</th>
+          <th>Total Pontos</th>
+          <th>Prêmio</th>
+          <th>Muito satisf.</th>
+          <th>Concluídos</th>
+          <th>Abertos</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let l of linhas">
+          <td>{{ l.nome }}</td>
+          <td>{{ l.pontosTotal }}</td>
+          <td>{{ l.premio | currency: 'BRL' }}</td>
+          <td>{{ l.atendimentosMuitoSatisfeito }}</td>
+          <td>{{ l.entregasConcluidas }}</td>
+          <td>{{ l.entregasAbertas }}</td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr>
+          <td>Total Geral</td>
+          <td>{{ total.pontosTotal }}</td>
+          <td>{{ total.premio | currency: 'BRL' }}</td>
+          <td>{{ total.atendimentosMuitoSatisfeito }}</td>
+          <td>{{ total.entregasConcluidas }}</td>
+          <td>{{ total.entregasAbertas }}</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>

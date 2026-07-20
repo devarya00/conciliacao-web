@@ -1,0 +1,154 @@
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+h3 {
+  margin: 0 0 8px;
+  font-size: 15px;
+  color: #334155;
+}
+
+.ajuda {
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+.form-envio {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+input[type='text'] {
+  padding: 9px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 14px;
+  min-width: 220px;
+}
+
+.botao-arquivo {
+  position: relative;
+  padding: 9px 16px;
+  border-radius: 10px;
+  background: var(--cor-azul);
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  input[type='file'] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+}
+
+button.gerar {
+  border: none;
+  background: #1a1a2e;
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 14px;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+.erro {
+  color: #dc2626;
+  font-size: 13px;
+  margin: 10px 0 0;
+}
+
+.tabela {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+
+  th,
+  td {
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 1px solid #eef1f6;
+  }
+
+  th {
+    color: #94a3b8;
+    font-weight: 600;
+  }
+}
+
+.badge {
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  text-transform: capitalize;
+
+  &.concluido {
+    background: #eafcef;
+    color: #22a35c;
+  }
+  &.erro {
+    background: #fdeaea;
+    color: #dc2626;
+  }
+  &.processando {
+    background: #fff6e0;
+    color: #b8860b;
+  }
+}
+
+.msg-erro {
+  margin-left: 6px;
+  cursor: help;
+}
+
+.acoes {
+  display: flex;
+  gap: 12px;
+}
+
+.baixar {
+  border: none;
+  background: transparent;
+  color: var(--cor-azul);
+  cursor: pointer;
+  font-size: 13px;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.excluir {
+  border: none;
+  background: transparent;
+  color: #dc2626;
+  cursor: pointer;
+  font-size: 13px;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.vazio {
+  color: #94a3b8;
+  font-size: 14px;
+}

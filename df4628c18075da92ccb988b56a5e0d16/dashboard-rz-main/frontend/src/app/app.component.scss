@@ -1,0 +1,54 @@
+.abas {
+  display: flex;
+  gap: 8px;
+  padding: 16px 24px 0;
+  max-width: 1400px;
+  margin: 0 auto;
+
+  button {
+    border: none;
+    background: transparent;
+    padding: 10px 16px;
+    font-size: 14px;
+    color: #64748b;
+    cursor: pointer;
+    border-radius: 10px 10px 0 0;
+
+    &.ativa {
+      background: #fff;
+      color: #1e293b;
+      font-weight: 600;
+    }
+  }
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  margin-left: 6px;
+  border-radius: 999px;
+  background: #dc2626;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.usuario {
+  align-self: center;
+  font-size: 13px;
+  color: #64748b;
+  margin-right: 4px;
+}
+
+button.sair {
+  color: #1e56c9;
+  font-weight: 600;
+}

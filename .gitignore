@@ -1,0 +1,5 @@
+# dados reais (PDFs/planilhas/db com dados de empresas e pessoas) — nunca versionar
+**/relatorio-rz/*.pdf
+**/relatorio-rz/*.xlsx
+**/relatorio-rz/*.db
+**/relatorio-rz/*.html

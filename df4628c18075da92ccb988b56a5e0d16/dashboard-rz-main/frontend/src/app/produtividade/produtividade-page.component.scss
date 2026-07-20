@@ -1,0 +1,35 @@
+.pagina {
+  display: flex;
+  gap: 24px;
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+  align-items: flex-start;
+}
+
+.conteudo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.aviso-erro {
+  margin: 0;
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: rgba(250, 178, 25, 0.16);
+  color: #b5790a;
+  font-size: 13px;
+}

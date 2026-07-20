@@ -1,0 +1,18 @@
+<div class="kpi-grid">
+  <div class="kpi cartao verde">
+    <span class="kpi-label">Tempo produtivo</span>
+    <span class="kpi-valor">{{ formatarHms(totais?.produtivoS) }}</span>
+  </div>
+  <div class="kpi cartao amarelo">
+    <span class="kpi-label">Tempo ocioso</span>
+    <span class="kpi-valor">{{ formatarHms(totais?.ocioS) }}</span>
+  </div>
+  <div class="kpi cartao vermelho">
+    <span class="kpi-label">Tempo improdutivo</span>
+    <span class="kpi-valor">{{ formatarHms(totais?.improdutivoS) }}</span>
+  </div>
+  <div class="kpi cartao azul">
+    <span class="kpi-label">Tempo neutro</span>
+    <span class="kpi-valor">{{ formatarHms(totais?.neutroS) }}</span>
+  </div>
+</div>

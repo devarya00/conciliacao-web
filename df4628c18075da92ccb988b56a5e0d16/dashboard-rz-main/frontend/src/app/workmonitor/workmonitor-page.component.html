@@ -1,0 +1,25 @@
+<div class="pagina">
+  <app-filtros-sidebar [opcoes]="opcoesFiltro" [mostrarReinf]="false" (filtroChange)="onFiltroChange($event)"></app-filtros-sidebar>
+
+  <div class="conteudo">
+    <p class="aviso-erro" *ngIf="erroCarregando">
+      Falha ao atualizar os dados. Tentando de novo no próximo filtro.
+    </p>
+
+    <app-workmonitor-kpi-cards [totais]="totais"></app-workmonitor-kpi-cards>
+
+    <div class="aneis">
+      <app-anel-progresso titulo="% Produtivo" [percentual]="percentual(totais?.produtivoS, captadasTotal)" cor="#8BC34A"></app-anel-progresso>
+      <app-anel-progresso titulo="% Improdutivo" [percentual]="percentual(totais?.improdutivoS, captadasTotal)" cor="#F44336"></app-anel-progresso>
+      <app-anel-progresso titulo="% Ocioso" [percentual]="percentual(totais?.ocioS, captadasTotal)" cor="#FFC107"></app-anel-progresso>
+      <app-anel-progresso titulo="% Neutro" [percentual]="percentual(totais?.neutroS, captadasTotal)" cor="#29B6F6"></app-anel-progresso>
+    </div>
+
+    <div class="grid-2">
+      <app-status-tempo [serie]="statusTempo"></app-status-tempo>
+      <app-dispersao-produtivo-score [dados]="colaboradores"></app-dispersao-produtivo-score>
+    </div>
+
+    <app-workmonitor-tabela [linhas]="colaboradores"></app-workmonitor-tabela>
+  </div>
+</div>

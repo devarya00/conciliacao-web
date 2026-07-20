@@ -2,11 +2,12 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { RelatorioGerado } from '../models/relatorio.model';
+import { apiBase } from '../../shared/desktop-app';
 
 @Injectable({ providedIn: 'root' })
 export class RelatoriosService {
   private http = inject(HttpClient);
-  private base = '/api/relatorios';
+  private base = apiBase() + '/api/relatorios';
 
   listar(): Observable<RelatorioGerado[]> {
     return this.http.get<RelatorioGerado[]>(this.base);

@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { AuthUser, LoginResponse } from '../models/auth.model';
+import { apiBase } from '../../shared/desktop-app';
 
 const TOKEN_KEY = 'bi_token';
 const USER_KEY = 'bi_user';
@@ -9,7 +10,7 @@ const USER_KEY = 'bi_user';
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private http = inject(HttpClient);
-  private base = '/api/auth';
+  private base = apiBase() + '/api/auth';
 
   private usuarioSubject = new BehaviorSubject<AuthUser | null>(this.lerUsuarioSalvo());
   usuario$ = this.usuarioSubject.asObservable();

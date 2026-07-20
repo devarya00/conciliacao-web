@@ -2,11 +2,12 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Arquivo, FiltroArquivos, Origem } from '../models/arquivo.model';
+import { apiBase } from '../../shared/desktop-app';
 
 @Injectable({ providedIn: 'root' })
 export class ArquivosService {
   private http = inject(HttpClient);
-  private base = '/api/dashboard/arquivos';
+  private base = apiBase() + '/api/dashboard/arquivos';
 
   listar(filtro: FiltroArquivos = {}): Observable<Arquivo[]> {
     const params: Record<string, string> = {};

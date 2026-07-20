@@ -4,11 +4,12 @@ import { Observable } from 'rxjs';
 import { Filtro, toParams } from '../../produtividade/models/filtro.model';
 import { FiltrosOptions } from '../../produtividade/models/dashboard.model';
 import { StatusTempo, WorkmonitorColaborador, WorkmonitorTotais } from '../models/workmonitor.model';
+import { apiBase } from '../../shared/desktop-app';
 
 @Injectable({ providedIn: 'root' })
 export class WorkmonitorService {
   private http = inject(HttpClient);
-  private base = '/api/dashboard';
+  private base = apiBase() + '/api/dashboard';
 
   filtros(): Observable<FiltrosOptions> {
     return this.http.get<FiltrosOptions>(`${this.base}/filtros`);

@@ -3,11 +3,12 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Filtro, toParams } from '../models/filtro.model';
 import { FiltrosOptions, Kpi, Ranking, Reinf, TaskType } from '../models/dashboard.model';
+import { apiBase } from '../../shared/desktop-app';
 
 @Injectable({ providedIn: 'root' })
 export class DashboardService {
   private http = inject(HttpClient);
-  private base = '/api/dashboard';
+  private base = apiBase() + '/api/dashboard';
 
   kpis(f: Filtro): Observable<Kpi> {
     return this.http.get<Kpi>(`${this.base}/kpis`, { params: toParams(f) });

@@ -12,13 +12,14 @@ import {
   ReviewQueueGrupo,
   SugestaoColaborador,
 } from '../models/review-queue.model';
+import { apiBase } from '../../shared/desktop-app';
 
 @Injectable({ providedIn: 'root' })
 export class ReviewQueueService {
   private http = inject(HttpClient);
-  private base = '/api/ingestion/review';
-  private baseResponsaveis = '/api/dashboard/responsaveis';
-  private baseColaboradores = '/api/dashboard/colaboradores';
+  private base = apiBase() + '/api/ingestion/review';
+  private baseResponsaveis = apiBase() + '/api/dashboard/responsaveis';
+  private baseColaboradores = apiBase() + '/api/dashboard/colaboradores';
 
   listar(departamento?: string, sourceFile?: string): Observable<ReviewQueueGrupo[]> {
     const params: Record<string, string> = {};

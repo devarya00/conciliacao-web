@@ -34,8 +34,11 @@ export class RelatoriosService {
 
   constructor(@Inject(KNEX_CONNECTION) private readonly db: Knex) {}
 
-  async listar(): Promise<RelatorioGerado[]> {
-    return this.db<RelatorioGerado>('relatorio_gerado').select('*').orderBy('created_at', 'desc');
+  /** Sem criadoPor (admin), lista tudo; com criadoPor (user), só o que essa pessoa gerou. */
+  async listar(criadoPor?: number): Promise<RelatorioGerado[]> {
+    const query = this.db<RelatorioGerado>('relatorio_gerado').select('*').orderBy('created_at', 'desc');
+    if (criadoPor !== undefined) query.where({ criado_por: criadoPor });
+    return query;
   }
 
   async buscar(id: number): Promise<RelatorioGerado | undefined> {

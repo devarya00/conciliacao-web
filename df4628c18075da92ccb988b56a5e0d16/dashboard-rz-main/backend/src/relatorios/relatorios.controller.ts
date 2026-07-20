@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   NotFoundException,
   Param,
@@ -40,8 +41,9 @@ export class RelatoriosController {
   constructor(private readonly relatoriosService: RelatoriosService) {}
 
   @Get()
-  listar(): Promise<RelatorioGerado[]> {
-    return this.relatoriosService.listar();
+  listar(@Req() req: Request): Promise<RelatorioGerado[]> {
+    const usuario = req.user as AuthUser;
+    return this.relatoriosService.listar(usuario.role === 'admin' ? undefined : usuario.id);
   }
 
   @Post()
@@ -85,9 +87,14 @@ export class RelatoriosController {
   }
 
   @Get(':id/download')
-  async baixar(@Param('id', ParseIntPipe) id: number, @Res() res: Response): Promise<void> {
+  async baixar(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: Request,
+    @Res() res: Response,
+  ): Promise<void> {
     const relatorio = await this.relatoriosService.buscar(id);
     if (!relatorio) throw new NotFoundException('Relatório não encontrado');
+    this.verificarAcesso(relatorio, req.user as AuthUser);
     if (relatorio.status !== 'concluido' || !relatorio.arquivo_xlsx) {
       throw new BadRequestException('Relatório ainda não concluído');
     }
@@ -96,8 +103,21 @@ export class RelatoriosController {
   }
 
   @Delete(':id')
-  async remover(@Param('id', ParseIntPipe) id: number): Promise<{ removido: boolean }> {
+  async remover(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: Request,
+  ): Promise<{ removido: boolean }> {
+    const relatorio = await this.relatoriosService.buscar(id);
+    if (!relatorio) throw new NotFoundException('Relatório não encontrado');
+    this.verificarAcesso(relatorio, req.user as AuthUser);
+
     await this.relatoriosService.remover(id);
     return { removido: true };
+  }
+
+  /** Dono do relatório ou admin — mais ninguém baixa/apaga (BOLA/IDOR). */
+  private verificarAcesso(relatorio: RelatorioGerado, usuario: AuthUser): void {
+    if (usuario.role === 'admin' || relatorio.criado_por === usuario.id) return;
+    throw new ForbiddenException('Você não tem acesso a esse relatório');
   }
 }

@@ -1,0 +1,105 @@
+name: Release Desktop
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version: 'lts/*'
+          cache: 'npm'
+          cache-dependency-path: |
+            frontend/package-lock.json
+            desktop/package-lock.json
+
+      - name: Instalar deps do Angular
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build do Angular (produção)
+        working-directory: frontend
+        # --base-href ./ é obrigatório: o app roda via file:// dentro do Electron,
+        # e o base-href absoluto padrão ("/") tentaria carregar os assets a
+        # partir da raiz do sistema de arquivos em vez da pasta do app.
+        run: npm run build -- --configuration production --base-href ./
+
+      - name: Copiar dist do Angular pro pacote Electron
+        run: |
+          rm -rf desktop/app
+          mkdir -p desktop/app
+          cp -r frontend/dist/dashboard-frontend/. desktop/app/
+
+      - name: Sincronizar versão do pacote com a tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          VERSAO="${GITHUB_REF_NAME#v}"
+          npm --prefix desktop version "$VERSAO" --no-git-tag-version --allow-same-version
+
+      - name: Gravar URL do backend em desktop/config.json
+        env:
+          API_URL: ${{ vars.DASHBOARD_API_URL }}
+        run: |
+          if [ -z "$API_URL" ]; then
+            echo "Defina a variável de repositório DASHBOARD_API_URL (Settings > Secrets and variables > Actions > Variables)." >&2
+            exit 1
+          fi
+          printf '{\n  "apiBaseUrl": "%s"\n}\n' "$API_URL" > desktop/config.json
+          cat desktop/config.json
+
+      - name: Liberar a origem da API no CSP (connect-src)
+        env:
+          API_URL: ${{ vars.DASHBOARD_API_URL }}
+        run: |
+          API_ORIGIN=$(node -e "console.log(new URL(process.argv[1]).origin)" "$API_URL")
+          sed -i "s#connect-src 'self';#connect-src 'self' ${API_ORIGIN};#" desktop/app/index.html
+          grep -o 'connect-src[^;]*;' desktop/app/index.html
+
+      - name: Instalar deps do desktop/
+        working-directory: desktop
+        run: npm ci
+
+      # Azure Trusted Signing — descomentar quando a conta/perfil de assinatura
+      # do Azure estiverem provisionados (preenche TODOs abaixo e os secrets
+      # AZURE_TENANT_ID / AZURE_CLIENT_ID / AZURE_CLIENT_SECRET no repo).
+      #
+      # Importante: assinatura precisa acontecer ANTES de publicar, mas o step
+      # de empacotamento abaixo usa --publish always (publica na hora). Pra
+      # habilitar assinatura de verdade: troque esse step pra
+      # `--publish never`, deixe esse bloco descomentado logo depois (assina o
+      # .exe já em desktop/release/), e adicione um step de publish separado
+      # no final (ex.: softprops/action-gh-release apontando pra
+      # desktop/release/*.exe) — senão o instalador sobe sem assinatura.
+      #
+      # - name: Assinar o instalador (Azure Trusted Signing)
+      #   uses: azure/trusted-signing-action@0d74250c661747df006298d0fb49944c10f16e03 # v0.5.1
+      #   with:
+      #     azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+      #     azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+      #     azure-client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+      #     endpoint: https://eus.codesigning.azure.net
+      #     trusted-signing-account-name: TODO-nome-da-conta-de-assinatura
+      #     certificate-profile-name: TODO-nome-do-perfil-de-certificado
+      #     files-folder: desktop/release
+      #     files-folder-filter: exe
+      #     file-digest: SHA256
+      #     timestamp-rfc3161: http://timestamp.acs.microsoft.com
+      #     timestamp-digest: SHA256
+
+      - name: Empacotar e publicar (electron-builder)
+        working-directory: desktop
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx electron-builder --win --x64 --publish always

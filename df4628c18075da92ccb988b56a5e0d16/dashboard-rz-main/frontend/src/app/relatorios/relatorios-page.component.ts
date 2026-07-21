@@ -68,6 +68,17 @@ export class RelatoriosPageComponent implements OnInit {
     });
   }
 
+  baixarPdf(relatorio: RelatorioGerado): void {
+    this.relatoriosService.baixarPdf(relatorio.id).subscribe((blob) => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `relatorio-${relatorio.nome_empresa}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  }
+
   excluir(relatorio: RelatorioGerado): void {
     const confirmado = confirm(`Excluir relatório de "${relatorio.nome_empresa}"?`);
     if (!confirmado) return;

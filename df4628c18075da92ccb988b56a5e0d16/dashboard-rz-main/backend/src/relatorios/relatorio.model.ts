@@ -8,6 +8,7 @@ export interface RelatorioGerado {
   arquivo_balancete: string;
   arquivo_resumo: string;
   arquivo_xlsx: string | null;
+  arquivo_pdf: string | null;
   criado_por: number | null;
   created_at: string;
 }

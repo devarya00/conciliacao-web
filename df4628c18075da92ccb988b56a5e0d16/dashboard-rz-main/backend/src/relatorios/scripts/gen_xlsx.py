@@ -97,65 +97,18 @@ acu_tot = con.execute(
        WHERE a.is_total=1"""
 ).fetchall()
 
-def resolve_conta(padrao, nivel=None, obrigatorio=True):
-    """Acha o código da conta pelo NOME (LIKE) no plano de contas desta empresa.
-    O nome segue o plano de contas referencial padrão do Domínio; o código
-    numérico não (cada empresa numera do seu jeito)."""
-    q = "SELECT codigo FROM balancete WHERE descricao LIKE ?"
-    params = [padrao]
-    if nivel is not None:
-        q += " AND nivel = ?"
-        params.append(nivel)
-    q += " ORDER BY codigo LIMIT 1"
-    row = con.execute(q, params).fetchone()
-    if row is None:
-        if obrigatorio:
-            # sys.exit(str) grava no stderr sem traceback — mensagem limpa pro usuário
-            sys.exit(
-                f"conta '{padrao}'" + (f" (nível {nivel})" if nivel else "")
-                + " não encontrada no plano de contas desta empresa — o relatório"
-                  " pressupõe o plano de contas referencial padrão do Domínio"
-            )
-        return None
-    return row[0]
+from plano_contas import PlanoContas
 
-
-# contas estruturais (Ativo/Passivo/DRE) — mesmo nome em qualquer empresa que
-# use o plano de contas referencial padrão do Domínio
-C_ATIVO = resolve_conta("ATIVO", nivel=1)
-C_PASSIVO = resolve_conta("PASSIVO", nivel=1)
-
-# demais contas: opcionais. Uma conta pode não aparecer no balancete impresso
-# porque a empresa não movimentou ela naquele período (Domínio não imprime
-# linha zerada) — não é motivo pra recusar o relatório inteiro, a linha some
-# ou vira 0 e as abas "Verificações"/"Fiscal" continuam sinalizando se algo
-# não bateu.
-C_ATIVO_CIRC = resolve_conta("ATIVO CIRCULANTE", nivel=2, obrigatorio=False)
-C_DISPONIVEL = resolve_conta("DISPON%", nivel=3, obrigatorio=False)
-C_OUTROS_CRED = resolve_conta("OUTROS CR%", nivel=3, obrigatorio=False)
-C_ESTOQUE = resolve_conta("ESTOQUE%", nivel=3, obrigatorio=False)
-C_ATIVO_NAO_CIRC = resolve_conta("ATIVO N%CIRCULANTE", nivel=2, obrigatorio=False)
-C_PASSIVO_CIRC = resolve_conta("PASSIVO CIRCULANTE", nivel=2, obrigatorio=False)
-C_PASSIVO_NAO_CIRC = resolve_conta("PASSIVO N%CIRCULANTE", nivel=2, obrigatorio=False)
-C_PL = resolve_conta("PATRIM%NIO L%QUIDO", nivel=2, obrigatorio=False)
-C_FORNECEDORES = resolve_conta("FORNECEDORES", nivel=3, obrigatorio=False)
-C_OBRIG_TRIB = resolve_conta("OBRIGA%TRIBUT%", nivel=3, obrigatorio=False)
-C_OBRIG_TRAB = resolve_conta("OBRIGA%TRABALHIST%", nivel=3, obrigatorio=False)
-C_CAPITAL_SOCIAL = resolve_conta("CAPITAL SOCIAL%", nivel=3, obrigatorio=False)
-C_LUCROS_PREJ = resolve_conta("LUCROS%PREJU%", nivel=3, obrigatorio=False)
-C_RESULT_CUSTOS = resolve_conta("CONTAS DE RESULTADO%CUSTOS%", nivel=1, obrigatorio=False)
-C_RESULT_RECEITAS = resolve_conta("CONTAS DE RESULTADO%RECEITA%", nivel=1, obrigatorio=False)
-C_RECEITA_BRUTA = resolve_conta("RECEITA BRUTA%", nivel=3, obrigatorio=False)
-C_DEDUCOES_RECEITA = resolve_conta("%DEDU%RECEITA%", nivel=3, obrigatorio=False)
-C_CUSTOS = resolve_conta("CUSTOS", nivel=2, obrigatorio=False)
-C_DESP_VENDAS = resolve_conta("DESPESAS COM VENDAS%", nivel=3, obrigatorio=False)
-C_DESP_ADMIN = resolve_conta("DESPESAS ADMINISTRATIVAS%", nivel=3, obrigatorio=False)
-
-# contas de ramo específico (ex.: veículos só existe em empresa com frota) —
-# opcionais, o relatório omite a linha se a empresa não tiver
-C_VEICULOS = resolve_conta("VE%CULOS%", obrigatorio=False)
-C_DEPRECIACOES = resolve_conta("%DEPRECIA%", obrigatorio=False)
-C_FORNECEDORES_NAC = resolve_conta("FORNECEDORES NACIONAIS%", obrigatorio=False) or C_FORNECEDORES
+pc = PlanoContas(con)
+C_ATIVO, C_PASSIVO = pc.ATIVO, pc.PASSIVO
+C_ATIVO_CIRC, C_DISPONIVEL, C_OUTROS_CRED, C_ESTOQUE = pc.ATIVO_CIRC, pc.DISPONIVEL, pc.OUTROS_CRED, pc.ESTOQUE
+C_ATIVO_NAO_CIRC, C_PASSIVO_CIRC, C_PASSIVO_NAO_CIRC, C_PL = pc.ATIVO_NAO_CIRC, pc.PASSIVO_CIRC, pc.PASSIVO_NAO_CIRC, pc.PL
+C_FORNECEDORES, C_OBRIG_TRIB, C_OBRIG_TRAB = pc.FORNECEDORES, pc.OBRIG_TRIB, pc.OBRIG_TRAB
+C_CAPITAL_SOCIAL, C_LUCROS_PREJ = pc.CAPITAL_SOCIAL, pc.LUCROS_PREJ
+C_RESULT_CUSTOS, C_RESULT_RECEITAS = pc.RESULT_CUSTOS, pc.RESULT_RECEITAS
+C_RECEITA_BRUTA, C_DEDUCOES_RECEITA, C_CUSTOS = pc.RECEITA_BRUTA, pc.DEDUCOES_RECEITA, pc.CUSTOS
+C_DESP_VENDAS, C_DESP_ADMIN = pc.DESP_VENDAS, pc.DESP_ADMIN
+C_VEICULOS, C_DEPRECIACOES, C_FORNECEDORES_NAC = pc.VEICULOS, pc.DEPRECIACOES, pc.FORNECEDORES_NAC
 
 forn = con.execute(
     "SELECT codigo, descricao FROM balancete WHERE pai = ? ORDER BY saldo_atual DESC",

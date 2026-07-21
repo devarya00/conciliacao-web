@@ -9,6 +9,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends python3 python3
 COPY package.json package-lock.json ./
 RUN npm ci
 
+# chromium do playwright: usado pra imprimir o relatorio-gerencial.pdf
+# (src/relatorios/relatorios.service.ts) a partir do html gerado por gen_html.py
+RUN npx playwright install --with-deps chromium
+
 COPY tsconfig.json nest-cli.json ./
 COPY src ./src
 RUN npm run build

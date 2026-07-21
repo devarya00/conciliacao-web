@@ -6,5 +6,6 @@ export interface RelatorioGerado {
   status: RelatorioStatus;
   erro_msg: string | null;
   arquivo_xlsx: string | null;
+  arquivo_pdf: string | null;
   created_at: string;
 }

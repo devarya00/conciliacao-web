@@ -102,6 +102,22 @@ export class RelatoriosController {
     res.download(relatorio.arquivo_xlsx, `relatorio-${relatorio.nome_empresa}.xlsx`);
   }
 
+  @Get(':id/download/pdf')
+  async baixarPdf(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: Request,
+    @Res() res: Response,
+  ): Promise<void> {
+    const relatorio = await this.relatoriosService.buscar(id);
+    if (!relatorio) throw new NotFoundException('Relatório não encontrado');
+    this.verificarAcesso(relatorio, req.user as AuthUser);
+    if (relatorio.status !== 'concluido' || !relatorio.arquivo_pdf) {
+      throw new BadRequestException('Relatório ainda não concluído');
+    }
+
+    res.download(relatorio.arquivo_pdf, `relatorio-${relatorio.nome_empresa}.pdf`);
+  }
+
   @Delete(':id')
   async remover(
     @Param('id', ParseIntPipe) id: number,

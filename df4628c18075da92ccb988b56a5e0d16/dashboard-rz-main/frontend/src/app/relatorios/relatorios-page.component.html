@@ -44,6 +44,7 @@
           </td>
           <td>{{ r.created_at | date: 'dd/MM/yyyy HH:mm' }}</td>
           <td class="acoes">
+            <button class="baixar" *ngIf="r.status === 'concluido' && r.arquivo_pdf" (click)="baixarPdf(r)">Baixar .pdf</button>
             <button class="baixar" *ngIf="r.status === 'concluido'" (click)="baixar(r)">Baixar .xlsx</button>
             <button class="excluir" (click)="excluir(r)">Excluir</button>
           </td>

@@ -25,6 +25,10 @@ export class RelatoriosService {
     return this.http.get(`${this.base}/${id}/download`, { responseType: 'blob' });
   }
 
+  baixarPdf(id: number): Observable<Blob> {
+    return this.http.get(`${this.base}/${id}/download/pdf`, { responseType: 'blob' });
+  }
+
   remover(id: number): Observable<{ removido: boolean }> {
     return this.http.delete<{ removido: boolean }>(`${this.base}/${id}`);
   }

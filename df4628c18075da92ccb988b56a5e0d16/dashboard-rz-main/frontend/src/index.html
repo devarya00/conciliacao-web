@@ -7,11 +7,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" type="image/x-icon" href="favicon.ico" />
   <!--
-    connect-src 'self' cobre o deploy web (nginx.conf faz proxy_pass /api ->
-    backend, mesma origem). No build desktop, desktop-build.yml (GitHub
-    Actions) adiciona a origem real da API aqui via sed, depois de copiar
-    esse dist/ pra desktop/app/ — sob file:// 'self' vira origem null, que
-    não cobre o domínio remoto do backend.
+    connect-src 'self' cobre deploy same-origin (nginx.conf faz proxy_pass
+    /api -> backend). Se o frontend for hospedado separado do backend (ex.:
+    Vercel), 'self' não cobre o domínio remoto da API — troque por
+    connect-src 'self' https://dominio-do-backend quando essa URL existir.
   -->
   <meta
     http-equiv="Content-Security-Policy"

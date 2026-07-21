@@ -2,6 +2,7 @@ node_modules/
 dist/
 .env
 .angular/
+__pycache__/
 
 # dados reais (planilhas/PDFs/db com dados de colaboradores e empresas) —
 # nunca versionar, só a estrutura de pastas via .gitkeep

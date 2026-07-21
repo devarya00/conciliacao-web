@@ -18,18 +18,18 @@ async function bootstrap() {
     helmet({
       // API pura (JSON + download de arquivo), sem HTML servido daqui — CSP
       // de verdade já vive no index.html do frontend. cross-origin liberado
-      // pq o cliente Electron consome via file:// (origem null).
+      // pq frontend e backend podem ficar em domínios diferentes (ex.:
+      // Vercel + backend hospedado à parte).
       contentSecurityPolicy: false,
       crossOriginResourcePolicy: { policy: 'cross-origin' },
     }),
   );
   app.enableCors({
     origin: (origin, callback) => {
-      // sem Origin (curl/server-to-server) ou 'null' (wrapper Electron,
-      // carregado via file://) não dá pra checar domínio — libera. Sem
-      // credentials:true aqui (o app usa Authorization: Bearer, não cookie),
-      // então isso não abre brecha de CSRF via cookie.
-      if (!origin || origin === 'null' || allowedOrigins.includes(origin)) {
+      // sem Origin (curl/server-to-server) não dá pra checar domínio —
+      // libera. Sem credentials:true aqui (o app usa Authorization: Bearer,
+      // não cookie), então isso não abre brecha de CSRF via cookie.
+      if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
         return;
       }

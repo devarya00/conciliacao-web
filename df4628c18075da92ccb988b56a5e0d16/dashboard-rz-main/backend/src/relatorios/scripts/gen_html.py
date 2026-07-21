@@ -24,6 +24,8 @@ TEMPLATES_DIR = Path(__file__).parent / "templates"
 # de corte a partir do qual vale chamar atenção
 LIMIAR_CONCENTRACAO_CREDOR = 0.25  # 25% do saldo de fornecedores num único credor
 LIMIAR_MARGEM_CUSTO = 1.0  # custo >= 100% da receita líquida do período
+LIMIAR_DIVERGENCIA_ESTOQUE = 0.3  # 30%+ do CMV sem baixa de estoque correspondente
+VALOR_MIN_DIVERGENCIA = 300.0  # abaixo disso não vale apontar (ruído de arredondamento)
 PALAVRAS_CADASTRO_GENERICO = ("MODELO", "PADRAO", "PADRÃO", "GENERIC", "TESTE", "IMPLANTACAO", "IMPLANTAÇÃO")
 SUFIXOS_EMPRESA = (" LTDA", " ME", " EPP", " EIRELI", " EIRELLI", " SA", " S/A", " S.A.")
 
@@ -105,6 +107,36 @@ def escala_barras(itens, largura_max_px=158, altura_barra=11.5, gap=7.5, viewbox
         y += altura_barra + gap
     altura_total = y - gap + 4
     return barras, altura_total
+
+
+def classifica_receita(con, codigo_raiz):
+    """Composição da receita bruta (mercadoria × serviço), lida pelo NOME das
+    contas-folha descendentes — nada assume o ramo de negócio da empresa.
+    Some vazio se não der pra classificar com confiança (>=95% do total)."""
+    if codigo_raiz is None:
+        return ""
+    rows = con.execute("SELECT codigo, descricao, pai, credito FROM balancete").fetchall()
+    by_code = {r[0]: r for r in rows}
+    filhos = {}
+    for cod, _desc, pai, _cred in rows:
+        filhos.setdefault(pai, []).append(cod)
+
+    descendentes, fila = [], list(filhos.get(codigo_raiz, []))
+    while fila:
+        atual = fila.pop()
+        descendentes.append(atual)
+        fila.extend(filhos.get(atual, []))
+    folhas = [c for c in descendentes if c not in filhos]
+
+    soma_mercadoria = sum(by_code[c][3] for c in folhas if "MERCADORIA" in by_code[c][1].upper())
+    soma_servico = sum(by_code[c][3] for c in folhas if "SERVI" in by_code[c][1].upper())
+    total = sum(by_code[c][3] for c in folhas)
+    if total <= 0 or (soma_mercadoria + soma_servico) / total < 0.95:
+        return ""
+
+    partes = [(v, n) for v, n in ((soma_mercadoria, "venda de mercadorias"), (soma_servico, "prestação de serviços")) if v > 0]
+    partes.sort(key=lambda x: -x[0])
+    return " · ".join(f"{fmt_pct(v / total)} {n}" for v, n in partes)
 
 
 def apontamentos(pc, con, ctx):
@@ -223,6 +255,21 @@ def apontamentos(pc, con, ctx):
                 titulo=f"{lbl} consome {fmt_pct(pct)} da receita líquida", corpo=corpo,
             ))
 
+    # 6) custo de mercadoria vendida sem baixa de estoque correspondente
+    if ctx["tem_estoque"] and ctx["custos_debito"] > 0:
+        diferenca = ctx["custos_debito"] - ctx["estoque_credito"]
+        if diferenca / ctx["custos_debito"] >= LIMIAR_DIVERGENCIA_ESTOQUE and diferenca >= VALOR_MIN_DIVERGENCIA:
+            pontos.insert(0, dict(
+                nivel="crit", tag="Movimentação de estoque",
+                titulo=f"Custo lançado (R$ {fmt_brl(ctx['custos_debito'])}) sem baixa de estoque equivalente",
+                corpo=(
+                    f"A conta de estoque só teve R$ {fmt_brl(ctx['estoque_credito'])} de crédito (saída) "
+                    f"no período — R$ {fmt_brl(diferenca)} do custo lançado não tem baixa de estoque "
+                    f"correspondente. Verificar nota fiscal de saída não registrada no estoque, uso de "
+                    f"conta de custo sem contrapartida, ou inventário desatualizado."
+                ),
+            ))
+
     return pontos
 
 
@@ -235,6 +282,12 @@ def main():
 
     def val(codigo, campo="saldo_atual_signed"):
         return pc.conta(codigo)[campo]
+
+    def descricao_conta(codigo):
+        if codigo is None:
+            return None
+        row = con.execute("SELECT descricao FROM balancete WHERE codigo=?", (codigo,)).fetchone()
+        return row[0] if row else None
 
     # DRE — movimento do período (débito/crédito) e saldo acumulado do exercício
     receita_bruta_bim = val(pc.RECEITA_BRUTA, "credito") - val(pc.RECEITA_BRUTA, "debito")
@@ -263,8 +316,13 @@ def main():
     def pct_total(v):
         return v / receita_liq_bim if receita_liq_bim else 0.0
 
+    # rótulo da 1ª linha vem do NOME real da conta (não assume mercadoria x
+    # serviço) — % fica em branco: "% da receita líquida" não faz sentido
+    # pra própria receita bruta que a origina
+    lbl_receita_bruta = titulo_pt(descricao_conta(pc.RECEITA_BRUTA) or "Receita bruta")
+
     dre_rows = [r for r in [
-        dict(lbl="Receita de prestação de serviços", valor=receita_bruta_bim, pct=pct_item(receita_bruta_bim), kind=""),
+        dict(lbl=lbl_receita_bruta, valor=receita_bruta_bim, pct=None, kind=""),
         dict(lbl="(−) Deduções sobre a receita", valor=deducoes_bim, pct=pct_item(deducoes_bim), kind="sub") if pc.DEDUCOES_RECEITA else None,
         dict(lbl="Receita líquida", valor=receita_liq_bim, pct=pct_total(receita_liq_bim), kind="group"),
         dict(lbl="(−) Custos", valor=custos_bim, pct=pct_item(custos_bim), kind="") if pc.CUSTOS else None,
@@ -308,9 +366,11 @@ def main():
         dict(lbl="Disponível — caixa geral", valor=disponivel, kind="sub", flag="credor" if disponivel < 0 else None) if pc.DISPONIVEL else None,
         dict(lbl="Outros créditos", valor=outros_cred, kind="sub") if pc.OUTROS_CRED else None,
         dict(lbl="Estoque — mercadorias e insumos", valor=estoque, kind="sub") if pc.ESTOQUE else None,
-        dict(lbl="Ativo não circulante", valor=ativo_nao_circ, kind="group"),
-        dict(lbl="Veículos", valor=veiculos, kind="sub") if pc.VEICULOS else None,
-        dict(lbl="(−) Depreciações acumuladas", valor=depreciacoes, kind="sub") if pc.DEPRECIACOES else None,
+        # só mostra o grupo "não circulante" se a empresa tiver essa conta de
+        # verdade — ausência de conta não é a mesma coisa que saldo 0
+        dict(lbl="Ativo não circulante", valor=ativo_nao_circ, kind="group") if pc.ATIVO_NAO_CIRC else None,
+        dict(lbl="Veículos", valor=veiculos, kind="sub") if pc.ATIVO_NAO_CIRC and pc.VEICULOS else None,
+        dict(lbl="(−) Depreciações acumuladas", valor=depreciacoes, kind="sub") if pc.ATIVO_NAO_CIRC and pc.DEPRECIACOES else None,
         dict(lbl="Total do ativo", valor=total_ativo, kind="total"),
     ] if r]
 
@@ -396,6 +456,12 @@ def main():
         capital_social=capital_social, prejuizos_acumulados=prejuizos_acumulados,
         resultado_nao_encerrado=resultado_nao_encerrado,
         fornecedores_todos=fornecedores_todos,
+        # CMV específico quando existir (mais preciso pra bater com estoque —
+        # CUSTOS total pode incluir despesa que não passa por estoque, ex.:
+        # ICMS antecipação ST); senão cai no CUSTOS total mesmo
+        custos_debito=val(pc.CMV, "debito") if pc.CMV else (val(pc.CUSTOS, "debito") if pc.CUSTOS else 0.0),
+        estoque_credito=val(pc.ESTOQUE, "credito") if pc.ESTOQUE else 0.0,
+        tem_estoque=bool(pc.ESTOQUE),
         custos_para_margem=[
             (lbl, bim, acu) for lbl, bim, acu in [
                 ("Custos", custos_bim, custos_acu),
@@ -405,6 +471,7 @@ def main():
         ],
     )
     callouts = apontamentos(pc, con, ctx)
+    nota_receita = classifica_receita(con, pc.RECEITA_BRUTA)
 
     env = Environment(loader=FileSystemLoader(str(TEMPLATES_DIR)), autoescape=True)
     env.filters["brl"] = fmt_brl
@@ -414,8 +481,7 @@ def main():
     html = tpl.render(
         empresa=titulo_pt(emp), cnpj=cnpj, periodo_ini=p0, periodo_fim=p1, emissao=emis,
         kpis=[
-            dict(lbl="Receita bruta do período", valor=receita_bruta_bim,
-                 nota="100% prestação de serviços" if pc.RECEITA_BRUTA else "", neg=False),
+            dict(lbl="Receita bruta do período", valor=receita_bruta_bim, nota=nota_receita, neg=False),
             dict(lbl="Resultado do período", valor=resultado_bim,
                  nota="prejuízo no período" if resultado_bim < 0 else "resultado positivo no período",
                  neg=resultado_bim < 0),
@@ -425,6 +491,12 @@ def main():
                  nota="com resultado não encerrado", neg=pl_efetivo < 0),
         ],
         dre_rows=dre_rows, acumulado_rows=acumulado_rows,
+        acumulado_nota=(
+            "Saldo acumulado desde o início do exercício, incluindo saldo já existente antes deste "
+            "período — por isso um valor aqui pode diferir do mesmo item na DRE acima, que mostra só "
+            "a movimentação do período (débito − crédito)."
+            if acumulado_rows else ""
+        ),
         barras_receita=barras_receita, altura_receita=altura_receita,
         desembolsos_cap=(
             f"Azul: entrada · vermelho: saídas."

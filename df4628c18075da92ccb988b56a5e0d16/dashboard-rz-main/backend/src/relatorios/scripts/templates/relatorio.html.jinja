@@ -129,7 +129,7 @@
         <tr class="{{ row.kind }}">
           <td>{{ row.lbl }}</td>
           <td class="num{{ ' neg' if row.valor < 0 else '' }}">{{ row.valor | brl }}</td>
-          <td class="num">{{ row.pct | pct }}</td>
+          <td class="num">{{ row.pct | pct if row.pct is not none else '' }}</td>
         </tr>
         {% endfor %}
       </tbody>
@@ -154,6 +154,7 @@
 
     {% if acumulado_rows %}
     <h3 class="sec">Resultado acumulado do exercício (não encerrado)</h3>
+    <p class="secnote">{{ acumulado_nota }}</p>
     <table>
       <thead><tr><th>Grupo</th><th style="width:34mm">Saldo acumulado (R$)</th></tr></thead>
       <tbody>

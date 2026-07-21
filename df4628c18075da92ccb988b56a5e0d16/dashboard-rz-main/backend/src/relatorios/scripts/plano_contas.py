@@ -58,6 +58,10 @@ class PlanoContas:
         self.RECEITA_BRUTA = r("RECEITA BRUTA%", nivel=3, obrigatorio=False)
         self.DEDUCOES_RECEITA = r("%DEDU%RECEITA%", nivel=3, obrigatorio=False)
         self.CUSTOS = r("CUSTOS", nivel=2, obrigatorio=False)
+        # CMV especificamente (subconjunto de CUSTOS) — usado só na conferência
+        # custo×estoque, onde precisão importa: CUSTOS pode incluir despesa que
+        # não passa por estoque (ex.: ICMS antecipação ST)
+        self.CMV = r("CUSTO%MERCADORIA%VEND%", obrigatorio=False)
         self.DESP_VENDAS = r("DESPESAS COM VENDAS%", nivel=3, obrigatorio=False)
         self.DESP_ADMIN = r("DESPESAS ADMINISTRATIVAS%", nivel=3, obrigatorio=False)
 

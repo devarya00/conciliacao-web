@@ -1,18 +1,18 @@
 <div class="status-filtro">
   <label class="toggle">
-    <input type="checkbox" [(ngModel)]="statusVisivel.pendentes" />
+    <input type="checkbox" [(ngModel)]="statusVisivel.pendentes" (ngModelChange)="onToggleStatus()" />
     Pendentes
   </label>
   <label class="toggle">
-    <input type="checkbox" [(ngModel)]="statusVisivel.justificadas" />
+    <input type="checkbox" [(ngModel)]="statusVisivel.justificadas" (ngModelChange)="onToggleStatus()" />
     Justificadas
   </label>
   <label class="toggle">
-    <input type="checkbox" [(ngModel)]="statusVisivel.entregues" />
+    <input type="checkbox" [(ngModel)]="statusVisivel.entregues" (ngModelChange)="onToggleStatus()" />
     Entregues
   </label>
   <label class="toggle">
-    <input type="checkbox" [(ngModel)]="statusVisivel.dispensadas" />
+    <input type="checkbox" [(ngModel)]="statusVisivel.dispensadas" (ngModelChange)="onToggleStatus()" />
     Dispensadas
   </label>
 </div>

@@ -271,13 +271,15 @@ export class DashboardService {
       .count({ qtd: '*' })
       .groupBy('dcte.canonical_id', 'fact_entrega.obrigacao', this.db.raw(`date_trunc('month', ${DATA_MESTRE})`));
 
-    // Entregas em aberto (pendente) no periodo, mesma fonte S3D dos pontos - usado
-    // pela tabela de pontuacao (planilha antiga contava Concluidos/Abertos do S3D,
-    // nao do Onvio).
+    // Entregas em aberto no periodo, mesma fonte S3D dos pontos - usado pela
+    // tabela de pontuacao (planilha antiga contava Concluidos/Abertos do S3D,
+    // nao do Onvio). status_class = f.statusClasses quando informado (filtro
+    // de status dos cards de KPI), senao 'pendente' (comportamento default).
+    // Nao mexe em tarefasQb/pontos acima - premio continua sempre por entregue.
     const abertasQb = this.qbEntregas(f)
       .clone()
       .join('v_colaborador as dcab', 'dcab.colaborador_id', 'fact_entrega.colaborador_id')
-      .andWhere({ status_class: 'pendente' })
+      .whereIn('status_class', f.statusClasses?.length ? f.statusClasses : ['pendente'])
       .where({ 'dcab.is_pessoa': true, 'dcab.active_employee': true })
       .whereNotNull('fact_entrega.colaborador_id')
       .select('dcab.canonical_id as colaboradorId')
@@ -420,7 +422,11 @@ export class DashboardService {
   }
 
   async tiposTarefa(f: FiltroDto): Promise<TaskTypeDto[]> {
-    const base = this.qbEntregas(f).clone().where({ status_class: 'entregue' });
+    // status_class = f.statusClasses quando informado (filtro de status dos
+    // cards de KPI), senao 'entregue' (comportamento default/antigo).
+    const base = this.qbEntregas(f)
+      .clone()
+      .whereIn('status_class', f.statusClasses?.length ? f.statusClasses : ['entregue']);
 
     const rows = await base
       .clone()

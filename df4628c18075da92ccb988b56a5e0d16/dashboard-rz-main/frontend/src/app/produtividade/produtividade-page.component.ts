@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-import { catchError, EMPTY, Subject, switchMap } from 'rxjs';
+import { BehaviorSubject, catchError, combineLatest, EMPTY, Subject, switchMap } from 'rxjs';
 import { DashboardService } from './data-access/dashboard.service';
 import { Filtro } from './models/filtro.model';
-import { FiltrosOptions, Kpi, Ranking, Reinf, TaskType } from './models/dashboard.model';
+import { FiltrosOptions, Kpi, Ranking, Reinf, STATUS_TAREFA_CLASSE, TaskType } from './models/dashboard.model';
 
 @Component({
   selector: 'app-produtividade-page',
@@ -11,6 +11,9 @@ import { FiltrosOptions, Kpi, Ranking, Reinf, TaskType } from './models/dashboar
 })
 export class ProdutividadePageComponent implements OnInit {
   private filtro$ = new Subject<Filtro>();
+  // Mesmo default do KpiCardsComponent (todos os status marcados) - filtro dos
+  // cards de status, tambem usado por Ranking e Detalhamento de tarefas.
+  private statusClasses$ = new BehaviorSubject<string[]>(Object.values(STATUS_TAREFA_CLASSE));
 
   opcoesFiltro: FiltrosOptions | null = null;
   kpi: Kpi | null = null;
@@ -27,11 +30,19 @@ export class ProdutividadePageComponent implements OnInit {
     this.filtro$
       .pipe(switchMap((f) => this.dashboardService.kpis(f).pipe(catchError(() => this.falhou()))))
       .subscribe((k) => k && (this.kpi = k));
-    this.filtro$
-      .pipe(switchMap((f) => this.dashboardService.ranking(f).pipe(catchError(() => this.falhou()))))
+    combineLatest([this.filtro$, this.statusClasses$])
+      .pipe(
+        switchMap(([f, statusClasses]) =>
+          this.dashboardService.ranking({ ...f, statusClasses }).pipe(catchError(() => this.falhou())),
+        ),
+      )
       .subscribe((r) => r && (this.ranking = r));
-    this.filtro$
-      .pipe(switchMap((f) => this.dashboardService.tiposTarefa(f).pipe(catchError(() => this.falhou()))))
+    combineLatest([this.filtro$, this.statusClasses$])
+      .pipe(
+        switchMap(([f, statusClasses]) =>
+          this.dashboardService.tiposTarefa({ ...f, statusClasses }).pipe(catchError(() => this.falhou())),
+        ),
+      )
       .subscribe((t) => t && (this.tiposTarefa = t));
     this.filtro$
       .pipe(switchMap((f) => this.dashboardService.reinf(f).pipe(catchError(() => this.falhou()))))
@@ -41,6 +52,10 @@ export class ProdutividadePageComponent implements OnInit {
   onFiltroChange(filtro: Filtro): void {
     this.erroCarregando = false;
     this.filtro$.next(filtro);
+  }
+
+  onStatusChange(statusClasses: string[]): void {
+    this.statusClasses$.next(statusClasses);
   }
 
   /** Mantem a subscription viva (switchMap mata o pipe se deixar o erro subir) e mostra aviso. */

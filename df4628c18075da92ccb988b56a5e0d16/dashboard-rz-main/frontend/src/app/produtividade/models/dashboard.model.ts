@@ -1,3 +1,13 @@
+export type StatusTarefa = 'pendentes' | 'justificadas' | 'entregues' | 'dispensadas';
+
+/** Chave do card/checkbox (front) -> status_class (back, fact_entrega). */
+export const STATUS_TAREFA_CLASSE: Record<StatusTarefa, string> = {
+  pendentes: 'pendente',
+  justificadas: 'justificada',
+  entregues: 'entregue',
+  dispensadas: 'dispensada',
+};
+
 export interface Kpi {
   empresas: number;
   tarefas: number;

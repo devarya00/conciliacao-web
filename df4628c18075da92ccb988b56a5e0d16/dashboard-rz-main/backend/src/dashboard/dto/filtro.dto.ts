@@ -1,9 +1,15 @@
 import { Transform, Type } from 'class-transformer';
-import { IsBoolean, IsDateString, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsBoolean, IsDateString, IsIn, IsOptional, IsString } from 'class-validator';
 
 function parseBoolean({ value }: { value: unknown }) {
   if (value === undefined) return undefined;
   return value === true || value === 'true' || value === '1';
+}
+
+function parseCsvArray({ value }: { value: unknown }) {
+  if (value === undefined) return undefined;
+  const arr = Array.isArray(value) ? value : String(value).split(',');
+  return arr.map((v) => String(v).trim()).filter(Boolean);
 }
 
 export class FiltroDto {
@@ -36,4 +42,11 @@ export class FiltroDto {
   @IsOptional()
   @IsString()
   colaborador?: string; // 'Todos'
+
+  /** CSV (ex.: "pendente,entregue"); ausente/vazio = sem restricao de status. */
+  @IsOptional()
+  @Transform(parseCsvArray)
+  @IsArray()
+  @IsIn(['pendente', 'justificada', 'entregue', 'dispensada'], { each: true })
+  statusClasses?: string[];
 }

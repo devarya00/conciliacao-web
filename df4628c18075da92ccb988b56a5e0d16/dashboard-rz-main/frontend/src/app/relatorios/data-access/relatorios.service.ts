@@ -13,9 +13,10 @@ export class RelatoriosService {
     return this.http.get<RelatorioGerado[]>(this.base);
   }
 
-  gerar(nomeEmpresa: string, balancete: File, resumo: File): Observable<RelatorioGerado> {
+  gerar(nomeEmpresa: string, competencia: string, balancete: File, resumo: File): Observable<RelatorioGerado> {
     const formData = new FormData();
     formData.append('nomeEmpresa', nomeEmpresa);
+    formData.append('competencia', competencia);
     formData.append('balancete', balancete);
     formData.append('resumo', resumo);
     return this.http.post<RelatorioGerado>(this.base, formData);

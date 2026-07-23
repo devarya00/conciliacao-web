@@ -1,0 +1,179 @@
+.conferencia {
+  padding: 12px 0;
+  border-top: 1px solid #eef1f6;
+  margin-top: 8px;
+}
+
+.erro {
+  color: #c0392b;
+}
+
+.progresso {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  margin-bottom: 4px;
+
+  .aviso {
+    color: #c0392b;
+  }
+}
+
+.barra {
+  background: #eee;
+  border-radius: 6px;
+  height: 10px;
+  width: 200px;
+  overflow: hidden;
+}
+
+.barra-fill {
+  background: #0ca30c;
+  height: 100%;
+}
+
+.nota {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 4px 0 12px;
+}
+
+.acoes {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+
+  .gerar-final {
+    background: #0ca30c;
+    color: #fff;
+    border: none;
+
+    &:disabled {
+      background: #cbd5e1;
+      cursor: not-allowed;
+    }
+  }
+}
+
+details {
+  margin-bottom: 8px;
+
+  summary {
+    cursor: pointer;
+    font-weight: 600;
+    padding: 6px 0;
+  }
+}
+
+.item {
+  padding: 8px 8px 8px 16px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.linha-principal {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  .codigo {
+    font-size: 11px;
+    color: #94a3b8;
+    font-family: monospace;
+  }
+
+  .titulo {
+    flex: 1;
+    font-size: 13px;
+  }
+
+  .corrigir {
+    font-size: 12px;
+    background: none;
+    border: 1px solid #cbd5e1;
+  }
+}
+
+.badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+
+  &.ok {
+    background: rgba(12, 163, 12, 0.14);
+    color: #0ca30c;
+  }
+  &.divergencia {
+    background: rgba(192, 57, 43, 0.14);
+    color: #c0392b;
+  }
+  &.nao_verificavel {
+    background: rgba(107, 114, 128, 0.14);
+    color: #6b7280;
+  }
+  &.pendente {
+    background: rgba(250, 178, 25, 0.16);
+    color: #b5790a;
+  }
+}
+
+.tag-auto {
+  font-size: 10px;
+  color: #7c4dd6;
+  border: 1px solid rgba(124, 77, 214, 0.4);
+  border-radius: 8px;
+  padding: 1px 6px;
+}
+
+.observacao {
+  font-size: 12px;
+  color: #444;
+  margin: 4px 0 0;
+}
+
+.dica {
+  font-size: 12px;
+  margin-top: 4px;
+
+  summary {
+    font-size: 11px;
+    font-weight: 400;
+    color: #6b7280;
+    padding: 2px 0;
+  }
+
+  pre {
+    white-space: pre-wrap;
+    font-family: inherit;
+    color: #555;
+    background: #f9fafb;
+    padding: 8px;
+    border-radius: 6px;
+  }
+}
+
+.edicao {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+  max-width: 480px;
+
+  select,
+  textarea {
+    font-size: 13px;
+    padding: 4px 6px;
+  }
+
+  textarea {
+    min-height: 60px;
+  }
+}
+
+.edicao-acoes {
+  display: flex;
+  gap: 8px;
+}

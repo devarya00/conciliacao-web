@@ -1,0 +1,80 @@
+<div class="conferencia">
+  <p *ngIf="carregando">Carregando conferência…</p>
+  <p class="erro" *ngIf="erro">{{ erro }}</p>
+
+  <ng-container *ngIf="conferencia as c">
+    <div class="progresso">
+      <div class="barra"><div class="barra-fill" [style.width.%]="percentual()"></div></div>
+      <span>{{ c.progresso.okAutomatizavel }}/{{ c.progresso.totalAutomatizavel }} itens automáticos OK ({{ percentual() }}%)</span>
+      <span class="aviso" *ngIf="c.progresso.divergenciaAutomatizavel > 0">
+        · {{ c.progresso.divergenciaAutomatizavel }} com divergência aberta
+      </span>
+    </div>
+    <p class="nota">
+      Total de {{ c.progresso.totalGeral }} itens do procedimento — {{ c.progresso.totalAutomatizavel }} verificados
+      automaticamente pelos dados do balancete/resumo; o restante exige conferência manual (fora do escopo
+      automatizável desta versão) e já vem marcado como "Não verificável".
+    </p>
+
+    <div class="acoes">
+      <button type="button" (click)="baixarPdf()">Baixar Relatório de Conferência (PDF)</button>
+      <button
+        type="button"
+        class="gerar-final"
+        [disabled]="!c.podeGerarFinal || gerandoFinal"
+        [title]="!c.podeGerarFinal ? (c.progresso.totalAutomatizavel - c.progresso.okAutomatizavel) + ' item(ns) automático(s) ainda não estão OK' : ''"
+        (click)="gerarFinal()"
+      >
+        {{ gerandoFinal ? 'Gerando…' : 'Gerar Relatório Final' }}
+      </button>
+    </div>
+
+    <details open>
+      <summary>Conferência e Validação da Integração Contábil ({{ grupoA().length }})</summary>
+      <ng-container *ngFor="let item of grupoA()">
+        <ng-container *ngTemplateOutlet="itemTpl; context: { item: item }"></ng-container>
+      </ng-container>
+    </details>
+
+    <details>
+      <summary>Apuração/Encerramento Contábil ({{ grupoB().length }})</summary>
+      <ng-container *ngFor="let item of grupoB()">
+        <ng-container *ngTemplateOutlet="itemTpl; context: { item: item }"></ng-container>
+      </ng-container>
+    </details>
+  </ng-container>
+</div>
+
+<ng-template #itemTpl let-item="item">
+  <div class="item">
+    <div class="linha-principal">
+      <span class="codigo">{{ item.passo.codigo }}</span>
+      <span class="titulo">{{ item.passo.titulo }}</span>
+      <span class="badge" [class]="item.status">{{ rotulo(item.status) }}</span>
+      <span class="tag-auto" *ngIf="item.sugeridoAutomatico" title="Calculado automaticamente pelo gerador">automático</span>
+      <button type="button" class="corrigir" *ngIf="!editando[item.passo.id]" (click)="iniciarEdicao(item)">Corrigir</button>
+    </div>
+    <p class="observacao" *ngIf="item.observacao">{{ item.observacao }}</p>
+    <details class="dica" *ngIf="item.passo.descricao">
+      <summary>Dica/procedimento</summary>
+      <pre>{{ item.passo.descricao }}</pre>
+    </details>
+
+    <div class="edicao" *ngIf="editando[item.passo.id]">
+      <select [(ngModel)]="rascunho[item.passo.id].status">
+        <option value="ok">OK</option>
+        <option value="divergencia">Divergência</option>
+        <option value="nao_verificavel">Não verificável</option>
+        <option value="pendente">Pendente</option>
+      </select>
+      <textarea
+        [(ngModel)]="rascunho[item.passo.id].observacao"
+        placeholder="Observação (obrigatória se divergência)"
+      ></textarea>
+      <div class="edicao-acoes">
+        <button type="button" [disabled]="precisaObservacao(item.passo.id)" (click)="salvarEdicao(item)">Salvar</button>
+        <button type="button" (click)="cancelarEdicao(item)">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</ng-template>

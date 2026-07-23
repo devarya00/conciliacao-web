@@ -26,12 +26,13 @@ h3 {
   flex-wrap: wrap;
 }
 
-input[type='text'] {
+input[type='text'],
+input[type='month'] {
   padding: 9px 12px;
   border: 1px solid #e2e8f0;
   border-radius: 10px;
   font-size: 14px;
-  min-width: 220px;
+  min-width: 160px;
 }
 
 .botao-arquivo {
@@ -108,10 +109,24 @@ button.gerar {
     background: #fdeaea;
     color: #dc2626;
   }
-  &.processando {
+  &.processando,
+  &.processando_final {
     background: #fff6e0;
     color: #b8860b;
   }
+  &.aguardando_conferencia {
+    background: #eef2ff;
+    color: #4f46e5;
+  }
+}
+
+.expandir {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+  color: #64748b;
+  padding: 0 4px;
 }
 
 .msg-erro {

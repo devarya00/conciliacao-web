@@ -8,6 +8,7 @@ import {
   NotFoundException,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Req,
   Res,
@@ -22,7 +23,9 @@ import { randomUUID } from 'crypto';
 import type { Request, Response } from 'express';
 import { RelatoriosService } from './relatorios.service';
 import { UploadRelatorioDto } from './dto/upload-relatorio.dto';
+import { AtualizarConferenciaItemDto } from './dto/atualizar-conferencia-item.dto';
 import { RelatorioGerado } from './relatorio.model';
+import { ConferenciaResponse } from './conferencia.model';
 import { AuthUser } from '../auth/usuario.model';
 
 const UPLOAD_DIR = join(process.env.INGESTAO_DIR || './data', 'relatorios', 'uploads');
@@ -80,10 +83,64 @@ export class RelatoriosController {
     const usuario = req.user as AuthUser;
     return this.relatoriosService.gerar({
       nomeEmpresa: body.nomeEmpresa,
+      competencia: body.competencia,
       balancetePath: balancete.path,
       resumoPath: resumo.path,
       criadoPor: usuario.id,
     });
+  }
+
+  @Get(':id/conferencia')
+  async obterConferencia(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: Request,
+  ): Promise<ConferenciaResponse> {
+    const relatorio = await this.relatoriosService.buscar(id);
+    if (!relatorio) throw new NotFoundException('Relatório não encontrado');
+    this.verificarAcesso(relatorio, req.user as AuthUser);
+    return this.relatoriosService.obterConferencia(id);
+  }
+
+  @Patch(':id/conferencia/:passoId')
+  async atualizarConferenciaItem(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('passoId', ParseIntPipe) passoId: number,
+    @Body() dto: AtualizarConferenciaItemDto,
+    @Req() req: Request,
+  ): Promise<ConferenciaResponse> {
+    const relatorio = await this.relatoriosService.buscar(id);
+    if (!relatorio) throw new NotFoundException('Relatório não encontrado');
+    const usuario = req.user as AuthUser;
+    this.verificarAcesso(relatorio, usuario);
+    return this.relatoriosService.atualizarItemConferencia(id, passoId, dto, usuario.id);
+  }
+
+  @Post(':id/gerar-final')
+  async gerarFinal(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: Request,
+  ): Promise<RelatorioGerado> {
+    const relatorio = await this.relatoriosService.buscar(id);
+    if (!relatorio) throw new NotFoundException('Relatório não encontrado');
+    this.verificarAcesso(relatorio, req.user as AuthUser);
+    return this.relatoriosService.gerarFinal(id);
+  }
+
+  @Get(':id/conferencia/pdf')
+  async baixarConferenciaPdf(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: Request,
+    @Res() res: Response,
+  ): Promise<void> {
+    const relatorio = await this.relatoriosService.buscar(id);
+    if (!relatorio) throw new NotFoundException('Relatório não encontrado');
+    this.verificarAcesso(relatorio, req.user as AuthUser);
+    const pdf = await this.relatoriosService.gerarConferenciaPdf(id);
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="conferencia-${relatorio.nome_empresa}.pdf"`,
+    });
+    res.send(pdf);
   }
 
   @Get(':id/download')

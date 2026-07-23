@@ -424,7 +424,11 @@ export class IngestaoService {
     nomeOriginal: string,
     arquivoId: number,
   ) {
-    const workbook = XLSX.readFile(caminho);
+    // raw:true - sem isso, o SheetJS tenta "adivinhar" celulas de data em CSV e
+    // reformata usando mes 0-indexado (bug da lib): "01/06/2026" virava "1/5/26".
+    // Com raw:true a celula fica como texto original, e parseExcelDate (que ja
+    // trata DD/MM/YYYY) faz o parse certo sempre.
+    const workbook = XLSX.readFile(caminho, { raw: true });
 
     switch (origem) {
       case 's3d': {

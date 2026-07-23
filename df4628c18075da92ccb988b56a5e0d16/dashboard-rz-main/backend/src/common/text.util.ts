@@ -16,17 +16,21 @@ export function normalizeEncoding(value: string | null | undefined): string {
   }
 }
 
-/** status_class: Ent.* -> entregue; Pendente/Atrasada!/Pend. justificada -> pendente; Dispensada -> dispensada; demais -> outro. */
+/** status_class: Ent.* -> entregue; Pend. justificada/Atraso justificado -> justificada; Pendente/Atrasada/Prazo tecnico -> pendente; Dispensada -> dispensada; demais -> outro. */
 export function classifyStatus(statusRaw: string | null | undefined): string {
   const status = normalizeEncoding(statusRaw).toLowerCase();
   if (!status) return 'outro';
   if (status.startsWith('ent')) return 'entregue';
   if (
-    status.startsWith('pendente') ||
-    status.startsWith('atrasada') ||
     status.startsWith('pend. justificada') ||
     status.startsWith('pend justificada') ||
-    status.startsWith('atraso justificado') ||
+    status.startsWith('atraso justificado')
+  ) {
+    return 'justificada';
+  }
+  if (
+    status.startsWith('pendente') ||
+    status.startsWith('atrasada') ||
     status.startsWith('prazo tecnico') ||
     status.startsWith('prazo técnico')
   ) {

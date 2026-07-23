@@ -1,3 +1,18 @@
+.status-filtro {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 12px;
+
+  .toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #52514e;
+  }
+}
+
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -43,6 +58,14 @@
   &.alerta {
     background: rgba(250, 178, 25, 0.16);
     color: #b5790a;
+  }
+  &.roxo {
+    background: rgba(124, 77, 214, 0.12);
+    color: #7c4dd6;
+  }
+  &.cinza {
+    background: rgba(107, 114, 128, 0.14);
+    color: #6b7280;
   }
 }
 

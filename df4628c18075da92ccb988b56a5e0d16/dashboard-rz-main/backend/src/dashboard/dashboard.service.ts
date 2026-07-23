@@ -13,10 +13,11 @@ import { FiltrosOptionsDto } from './dto/filtros-options.dto';
 import { chaveObrigacao } from '../common/text.util';
 
 /**
- * Data mestre do filtro: data_entrega; quando nula (pendencias), usa prazo_tecnico.
- * COALESCE reproduz essa regra em toda query filtrada por periodo.
+ * Data mestre do filtro: prazo_tecnico (planilha S3D) - mesmo campo em toda
+ * linha, entregue ou nao, por isso usado sozinho (sem COALESCE com
+ * data_entrega) em toda query filtrada por periodo.
  */
-const DATA_MESTRE = 'COALESCE(data_entrega, prazo_tecnico)';
+const DATA_MESTRE = 'prazo_tecnico';
 
 @Injectable()
 export class DashboardService {
@@ -64,11 +65,25 @@ export class DashboardService {
       .where({ is_reinf: true, status_class: 'pendente' })
       .count({ count: '*' });
 
+    // Contagem por status_class (cards de filtro pendente/justificada/entregue/dispensada
+    // + total geral) - agrupa numa unica query em vez de 5 counts separados.
+    const porStatus = await base.clone().select('status_class').count({ qtd: '*' }).groupBy('status_class');
+
+    const qtdPorClasse = new Map<string, number>(
+      (porStatus as any[]).map((r) => [r.status_class, Number(r.qtd)]),
+    );
+    const totalTarefas = [...qtdPorClasse.values()].reduce((acc, n) => acc + n, 0);
+
     return {
       empresas: Number(empresas),
       tarefas: Number(tarefas),
       reinfFechados: Number(reinfFechados),
       reinfPendentes: Number(reinfPendentes),
+      pendentes: qtdPorClasse.get('pendente') ?? 0,
+      justificadas: qtdPorClasse.get('justificada') ?? 0,
+      entregues: qtdPorClasse.get('entregue') ?? 0,
+      dispensadas: qtdPorClasse.get('dispensada') ?? 0,
+      totalTarefas,
     };
   }
 
@@ -239,9 +254,9 @@ export class DashboardService {
     // Pontos de tarefas: fact_entrega.colaborador_id so existe quando Responsavel
     // prazo/entrega bateram no S3D (ver s3d.parser). Cruza obrigacao -> pontos
     // (dim_tarefa_pontos) em JS via chaveObrigacao, mesmo padrao dos outros cruzamentos.
-    // Conta pelo MES DA ENTREGA (DATA_MESTRE, mesma base do filtro de periodo), nao
-    // pela competencia da obrigacao - backlog atrasado entregue em lote conta no mes
-    // que foi de fato marcado como entregue, nao no mes de referencia original.
+    // Conta pelo MES DO PRAZO TECNICO (DATA_MESTRE, mesma base do filtro de periodo),
+    // nao pela competencia da obrigacao - backlog atrasado entregue em lote conta no mes
+    // do prazo original, nao no mes de referencia da competencia.
     const tarefasQb = this.qbEntregas(f)
       .clone()
       .join('v_colaborador as dcte', 'dcte.colaborador_id', 'fact_entrega.colaborador_id')

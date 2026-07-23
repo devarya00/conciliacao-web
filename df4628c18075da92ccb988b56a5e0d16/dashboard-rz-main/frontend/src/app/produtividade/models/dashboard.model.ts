@@ -3,6 +3,11 @@ export interface Kpi {
   tarefas: number;
   reinfFechados: number;
   reinfPendentes: number;
+  pendentes: number;
+  justificadas: number;
+  entregues: number;
+  dispensadas: number;
+  totalTarefas: number;
 }
 
 export interface Ranking {

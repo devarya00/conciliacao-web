@@ -10,6 +10,7 @@ import { RankingFuncionariosComponent } from './widgets/ranking-funcionarios.com
 import { TiposTarefaComponent } from './widgets/tipos-tarefa.component';
 import { TermometroReinfComponent } from './widgets/termometro-reinf.component';
 import { PontuacaoTabelaComponent } from './widgets/pontuacao-tabela.component';
+import { EmpresasAtendidasComponent } from './widgets/empresas-atendidas.component';
 
 @NgModule({
   declarations: [
@@ -20,6 +21,7 @@ import { PontuacaoTabelaComponent } from './widgets/pontuacao-tabela.component';
     TiposTarefaComponent,
     TermometroReinfComponent,
     PontuacaoTabelaComponent,
+    EmpresasAtendidasComponent,
   ],
   imports: [
     CommonModule,

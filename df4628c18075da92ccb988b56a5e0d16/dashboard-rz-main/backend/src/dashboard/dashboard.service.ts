@@ -10,6 +10,7 @@ import { RankingDto } from './dto/ranking.dto';
 import { TaskTypeDto } from './dto/task-type.dto';
 import { ReinfDto } from './dto/reinf.dto';
 import { FiltrosOptionsDto } from './dto/filtros-options.dto';
+import { EmpresaAtendidaDto } from './dto/empresa-atendida.dto';
 import { chaveObrigacao } from '../common/text.util';
 
 /**
@@ -50,9 +51,11 @@ export class DashboardService {
       .where({ status_class: 'entregue' })
       .count({ count: '*' });
 
+    // status_class = f.statusClasses quando informado (filtro de status dos
+    // cards de KPI), senao 'entregue' (comportamento default/antigo).
     const [{ count: empresas }] = await base
       .clone()
-      .where({ status_class: 'entregue' })
+      .whereIn('status_class', f.statusClasses?.length ? f.statusClasses : ['entregue'])
       .countDistinct({ count: 'emp_id' });
 
     const [{ count: reinfFechados }] = await base
@@ -85,6 +88,24 @@ export class DashboardService {
       dispensadas: qtdPorClasse.get('dispensada') ?? 0,
       totalTarefas,
     };
+  }
+
+  /** Lista (nao so contagem) das empresas atendidas no periodo - mesmo criterio de status do card "Empresas atendidas". */
+  async empresasAtendidas(f: FiltroDto): Promise<EmpresaAtendidaDto[]> {
+    const rows = await this.qbEntregas(f)
+      .clone()
+      .whereIn('status_class', f.statusClasses?.length ? f.statusClasses : ['entregue'])
+      .join('dim_empresa as de', 'de.emp_id', 'fact_entrega.emp_id')
+      .distinct('de.emp_id as empId', 'de.razao_social as razaoSocial', 'de.cnpj', 'de.cidade', 'de.estado')
+      .orderBy('de.razao_social');
+
+    return (rows as any[]).map((r) => ({
+      empId: Number(r.empId),
+      razaoSocial: r.razaoSocial,
+      cnpj: r.cnpj,
+      cidade: r.cidade,
+      estado: r.estado,
+    }));
   }
 
   async serieTempo(f: FiltroDto): Promise<SerieTempoDto[]> {

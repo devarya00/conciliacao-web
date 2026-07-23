@@ -50,6 +50,14 @@ export interface Reinf {
   percentualConclusao: number;
 }
 
+export interface EmpresaAtendida {
+  empId: number;
+  razaoSocial: string | null;
+  cnpj: string | null;
+  cidade: string | null;
+  estado: string | null;
+}
+
 export interface FiltrosOptions {
   departamentos: string[];
   colaboradores: { id: number; nome: string }[];

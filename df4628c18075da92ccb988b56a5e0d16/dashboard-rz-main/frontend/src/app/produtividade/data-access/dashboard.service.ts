@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Filtro, toParams } from '../models/filtro.model';
-import { FiltrosOptions, Kpi, Ranking, Reinf, TaskType } from '../models/dashboard.model';
+import { EmpresaAtendida, FiltrosOptions, Kpi, Ranking, Reinf, TaskType } from '../models/dashboard.model';
 import { apiBase } from '../../shared/desktop-app';
 
 @Injectable({ providedIn: 'root' })
@@ -12,6 +12,10 @@ export class DashboardService {
 
   kpis(f: Filtro): Observable<Kpi> {
     return this.http.get<Kpi>(`${this.base}/kpis`, { params: toParams(f) });
+  }
+
+  empresasAtendidas(f: Filtro): Observable<EmpresaAtendida[]> {
+    return this.http.get<EmpresaAtendida[]>(`${this.base}/empresas-atendidas`, { params: toParams(f) });
   }
 
   ranking(f: Filtro): Observable<Ranking[]> {

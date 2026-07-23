@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-import { BehaviorSubject, catchError, combineLatest, EMPTY, Subject, switchMap } from 'rxjs';
+import { BehaviorSubject, catchError, combineLatest, EMPTY, map, Subject, switchMap } from 'rxjs';
 import { DashboardService } from './data-access/dashboard.service';
 import { Filtro } from './models/filtro.model';
-import { FiltrosOptions, Kpi, Ranking, Reinf, STATUS_TAREFA_CLASSE, TaskType } from './models/dashboard.model';
+import { EmpresaAtendida, FiltrosOptions, Kpi, Ranking, Reinf, STATUS_TAREFA_CLASSE, TaskType } from './models/dashboard.model';
 
 @Component({
   selector: 'app-produtividade-page',
@@ -12,13 +12,14 @@ import { FiltrosOptions, Kpi, Ranking, Reinf, STATUS_TAREFA_CLASSE, TaskType } f
 export class ProdutividadePageComponent implements OnInit {
   private filtro$ = new Subject<Filtro>();
   // Mesmo default do KpiCardsComponent (todos os status marcados) - filtro dos
-  // cards de status, tambem usado por Ranking e Detalhamento de tarefas.
+  // cards de status, tambem usado por Empresas atendidas, Ranking e Detalhamento.
   private statusClasses$ = new BehaviorSubject<string[]>(Object.values(STATUS_TAREFA_CLASSE));
 
   opcoesFiltro: FiltrosOptions | null = null;
   kpi: Kpi | null = null;
   ranking: Ranking[] = [];
   tiposTarefa: TaskType[] = [];
+  empresasAtendidas: EmpresaAtendida[] = [];
   reinf: Reinf | null = null;
   erroCarregando = false;
 
@@ -27,23 +28,22 @@ export class ProdutividadePageComponent implements OnInit {
   ngOnInit(): void {
     this.dashboardService.filtros().subscribe((opcoes) => (this.opcoesFiltro = opcoes));
 
-    this.filtro$
+    const filtroComStatus$ = combineLatest([this.filtro$, this.statusClasses$]).pipe(
+      map(([f, statusClasses]) => ({ ...f, statusClasses })),
+    );
+
+    filtroComStatus$
       .pipe(switchMap((f) => this.dashboardService.kpis(f).pipe(catchError(() => this.falhou()))))
       .subscribe((k) => k && (this.kpi = k));
-    combineLatest([this.filtro$, this.statusClasses$])
-      .pipe(
-        switchMap(([f, statusClasses]) =>
-          this.dashboardService.ranking({ ...f, statusClasses }).pipe(catchError(() => this.falhou())),
-        ),
-      )
+    filtroComStatus$
+      .pipe(switchMap((f) => this.dashboardService.ranking(f).pipe(catchError(() => this.falhou()))))
       .subscribe((r) => r && (this.ranking = r));
-    combineLatest([this.filtro$, this.statusClasses$])
-      .pipe(
-        switchMap(([f, statusClasses]) =>
-          this.dashboardService.tiposTarefa({ ...f, statusClasses }).pipe(catchError(() => this.falhou())),
-        ),
-      )
+    filtroComStatus$
+      .pipe(switchMap((f) => this.dashboardService.tiposTarefa(f).pipe(catchError(() => this.falhou()))))
       .subscribe((t) => t && (this.tiposTarefa = t));
+    filtroComStatus$
+      .pipe(switchMap((f) => this.dashboardService.empresasAtendidas(f).pipe(catchError(() => this.falhou()))))
+      .subscribe((e) => e && (this.empresasAtendidas = e));
     this.filtro$
       .pipe(switchMap((f) => this.dashboardService.reinf(f).pipe(catchError(() => this.falhou()))))
       .subscribe((r) => r && (this.reinf = r));

@@ -9,6 +9,7 @@ import { RankingDto } from './dto/ranking.dto';
 import { TaskTypeDto } from './dto/task-type.dto';
 import { ReinfDto } from './dto/reinf.dto';
 import { FiltrosOptionsDto } from './dto/filtros-options.dto';
+import { EmpresaAtendidaDto } from './dto/empresa-atendida.dto';
 import { Roles } from '../auth/roles.decorator';
 
 @Roles('admin')
@@ -19,6 +20,11 @@ export class DashboardController {
   @Get('kpis')
   kpis(@Query() filtro: FiltroDto): Promise<KpiDto> {
     return this.dashboardService.kpis(filtro);
+  }
+
+  @Get('empresas-atendidas')
+  empresasAtendidas(@Query() filtro: FiltroDto): Promise<EmpresaAtendidaDto[]> {
+    return this.dashboardService.empresasAtendidas(filtro);
   }
 
   @Get('serie-tempo')

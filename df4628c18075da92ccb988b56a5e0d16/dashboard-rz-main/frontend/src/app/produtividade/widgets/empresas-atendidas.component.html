@@ -1,0 +1,24 @@
+<div class="cartao widget">
+  <h3>Empresas atendidas ({{ empresas.length }})</h3>
+  <div class="tabela-scroll">
+    <table class="tabela">
+      <thead>
+        <tr>
+          <th>Empresa</th>
+          <th>CNPJ</th>
+          <th>Cidade/UF</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let e of empresas">
+          <td>{{ e.razaoSocial }}</td>
+          <td>{{ e.cnpj }}</td>
+          <td>{{ e.cidade }}{{ e.cidade && e.estado ? '/' : '' }}{{ e.estado }}</td>
+        </tr>
+        <tr *ngIf="empresas.length === 0">
+          <td colspan="3">Nenhuma empresa no período/filtro selecionado.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

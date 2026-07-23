@@ -33,6 +33,8 @@ interface SugestaoAutomatica {
   codigo: string;
   status: ConferenciaStatus;
   observacao: string;
+  valorFiscal?: number | null;
+  valorContabil?: number | null;
 }
 
 function garantirDiretorio(dir: string): string {
@@ -185,6 +187,8 @@ export class RelatoriosService implements OnModuleDestroy {
           .update({
             status: s.status,
             observacao: s.observacao,
+            valor_fiscal: s.valorFiscal ?? null,
+            valor_contabil: s.valorContabil ?? null,
             sugerido_automatico: true,
             atualizado_em: this.db.fn.now(),
           });
@@ -204,6 +208,8 @@ export class RelatoriosService implements OnModuleDestroy {
         'ci.relatorio_gerado_id',
         'ci.status',
         'ci.observacao',
+        'ci.valor_fiscal',
+        'ci.valor_contabil',
         'ci.sugerido_automatico',
         'ci.atualizado_por',
         'ci.atualizado_em',
@@ -221,6 +227,8 @@ export class RelatoriosService implements OnModuleDestroy {
       relatorioGeradoId: Number(l.relatorio_gerado_id),
       status: l.status,
       observacao: l.observacao,
+      valorFiscal: l.valor_fiscal !== null ? Number(l.valor_fiscal) : null,
+      valorContabil: l.valor_contabil !== null ? Number(l.valor_contabil) : null,
       sugeridoAutomatico: l.sugerido_automatico,
       atualizadoPor: l.atualizado_por !== null ? Number(l.atualizado_por) : null,
       atualizadoEm: l.atualizado_em,
@@ -378,11 +386,38 @@ export class RelatoriosService implements OnModuleDestroy {
         <td><span style="color:${corStatus[i.status]};font-weight:bold">${rotuloStatus[i.status]}</span></td>
         <td>${esc(i.observacao)}</td>
       </tr>`;
-    const grupoA = itens.filter((i) => i.passo.grupo === 'A').map(linha).join('');
-    const grupoB = itens.filter((i) => i.passo.grupo === 'B').map(linha).join('');
+    const grupoA = itens.filter((i) => i.passo.grupo === 'A' && i.valorContabil === null).map(linha).join('');
+    const grupoB = itens.filter((i) => i.passo.grupo === 'B' && i.valorContabil === null).map(linha).join('');
     const pct = progresso.totalAutomatizavel > 0
       ? Math.round((progresso.okAutomatizavel / progresso.totalAutomatizavel) * 100)
       : 0;
+
+    // Comparação numérica (Fornecedores/Estoque/Receita x resumo) - tabela
+    // compacta, menos texto: valores em colunas, status OK/CRÍTICO só aqui.
+    const fmtMoeda = (v: number) =>
+      v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const comparacoes = itens.filter((i) => i.valorContabil !== null);
+    const linhaComparacao = (i: ConferenciaItem) => {
+      const temFiscal = i.valorFiscal !== null;
+      const diferenca = temFiscal ? (i.valorFiscal as number) - (i.valorContabil as number) : null;
+      const critico = i.status === 'divergencia';
+      return `
+      <tr>
+        <td style="white-space:nowrap;color:#666">${esc(i.passo.codigo)}</td>
+        <td><span style="color:${critico ? '#c0392b' : '#0ca30c'};font-weight:bold">${critico ? 'CRÍTICO' : 'OK'}</span></td>
+        <td>${esc(i.passo.titulo)}</td>
+        <td style="text-align:right">${temFiscal ? fmtMoeda(i.valorFiscal as number) : '—'}</td>
+        <td style="text-align:right">${fmtMoeda(i.valorContabil as number)}</td>
+        <td style="text-align:right;color:${diferenca !== null && Math.abs(diferenca) > 0.01 ? '#c0392b' : '#1a1a1a'}">${diferenca !== null ? fmtMoeda(diferenca) : '—'}</td>
+      </tr>`;
+    };
+    const tabelaComparacao = comparacoes.length
+      ? `<h2>Comparação Fiscal x Contábil</h2>
+         <table>
+           <thead><tr><th>Regra</th><th>Status</th><th>Descrição</th><th style="text-align:right">Vlr Fiscal</th><th style="text-align:right">Vlr Contábil</th><th style="text-align:right">Diferença</th></tr></thead>
+           <tbody>${comparacoes.map(linhaComparacao).join('')}</tbody>
+         </table>`
+      : '';
 
     return `<!doctype html>
 <html><head><meta charset="utf-8"><style>
@@ -393,13 +428,15 @@ export class RelatoriosService implements OnModuleDestroy {
   .barra { background: #eee; border-radius: 6px; height: 14px; width: 100%; overflow: hidden; margin: 8px 0 4px; }
   .barra-fill { background: #0ca30c; height: 100%; }
   table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-  td { border-bottom: 1px solid #eee; padding: 4px 6px; vertical-align: top; }
+  td, th { border-bottom: 1px solid #eee; padding: 4px 6px; vertical-align: top; }
+  th { text-align: left; color: #666; }
 </style></head>
 <body>
   <h1>Relatório de Conferência — ${esc(relatorio.nome_empresa)}</h1>
   <div class="sub">Competência: ${esc(this.formatarCompetencia(relatorio.competencia))} · Emitido em ${new Date().toLocaleString('pt-BR')}</div>
   <div>Itens automatizáveis OK: ${progresso.okAutomatizavel}/${progresso.totalAutomatizavel} (${pct}%)</div>
   <div class="barra"><div class="barra-fill" style="width:${pct}%"></div></div>
+  ${tabelaComparacao}
   <h2>Conferência e Validação da Integração Contábil</h2>
   <table>${grupoA}</table>
   <h2>Apuração/Encerramento Contábil</h2>

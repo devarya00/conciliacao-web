@@ -42,25 +42,26 @@ def existe_conta_valor(con, padrao, nivel=None):
 
 
 def regra_importado(con, codigo_passo, padrao, grupo_esperado, nivel=None):
-    """Checagem generica de 'foi importado no Ativo/Passivo/Resultado com saldo != 0'."""
+    """Checagem generica de 'foi importado no Ativo/Passivo/Resultado com saldo != 0'.
+    Sem contrapartida fiscal (folha de pagamento nao e' documento de entrada deste
+    relatorio) - valorFiscal fica None, exibido como "-" na tabela de comparacao."""
     codigo, saldo = existe_conta_valor(con, padrao, nivel=nivel)
     if codigo is None:
         return dict(
             codigo=codigo_passo, status="divergencia",
             observacao=f"Conta \"{padrao}\" não localizada no plano de contas extraído do balancete.",
+            valorFiscal=None, valorContabil=None,
         )
     if abs(saldo) < 0.01:
         return dict(
             codigo=codigo_passo, status="divergencia",
             observacao=f"Conta \"{padrao}\" (código {codigo}) localizada, mas com saldo zerado no período.",
+            valorFiscal=None, valorContabil=abs(saldo),
         )
     return dict(
         codigo=codigo_passo, status="ok",
-        observacao=(
-            f"Conta \"{padrao}\" (código {codigo}) importada com saldo de {fmt(saldo)}. "
-            f"Comparação com o resumo da folha de pagamento não realizada — este relatório "
-            f"não recebe esse documento como entrada."
-        ),
+        observacao=f"Conta \"{padrao}\" (código {codigo}) importada.",
+        valorFiscal=None, valorContabil=abs(saldo),
     )
 
 
@@ -86,46 +87,40 @@ def regra_saldo_negativo_grupo(pc):
 
 def regra_caixa_credor(pc):
     disp = pc.conta(pc.DISPONIVEL)
-    if pc.DISPONIVEL and disp["saldo_atual_signed"] < -0.01:
+    saldo = disp["saldo_atual_signed"] if pc.DISPONIVEL else None
+    if pc.DISPONIVEL and saldo < -0.01:
         return dict(
-            codigo="A04", status="divergencia",
-            observacao=f"Caixa/disponível com saldo credor de {fmt(disp['saldo_atual_signed'])}.",
+            codigo="A04", status="divergencia", observacao="Caixa/disponível com saldo credor.",
+            valorFiscal=None, valorContabil=abs(saldo),
         )
-    return dict(codigo="A04", status="ok", observacao="Sem saldo credor de caixa detectado no balancete.")
+    return dict(
+        codigo="A04", status="ok", observacao="Sem saldo credor de caixa detectado no balancete.",
+        valorFiscal=None, valorContabil=(abs(saldo) if saldo is not None else None),
+    )
 
 
-def regra_comparacao_secao(con, codigo_passo, saldo_conta, nome_conta, nomes_secao):
+def regra_comparacao_secao(con, codigo_passo, codigo_conta, saldo_conta, nome_conta, nomes_secao):
+    """Compara um saldo do balancete contra o total de uma secao do resumo por
+    acumulador. Alem do status/observacao (curtos, pra tabela), devolve
+    valorFiscal/valorContabil pra exibicao em colunas separadas."""
+    conta_txt = f"{nome_conta} (conta {codigo_conta})" if codigo_conta else nome_conta
     total = None
-    secao_usada = None
     for nome in nomes_secao:
         total = total_secao(con, nome)
         if total is not None:
-            secao_usada = nome
             break
     if total is None:
         return dict(
             codigo=codigo_passo, status="nao_verificavel",
-            observacao=f"Seção {'/'.join(nomes_secao)} não presente no resumo por acumulador extraído — comparação não aplicável.",
+            observacao=f"{conta_txt}: seção {'/'.join(nomes_secao)} não presente no resumo.",
+            valorFiscal=None, valorContabil=None,
         )
     saldo_abs = abs(saldo_conta)
     diff = abs(saldo_abs - total)
     tolerancia = max(total, saldo_abs) * TOLERANCIA_PCT
-    if diff > tolerancia:
-        return dict(
-            codigo=codigo_passo, status="divergencia",
-            observacao=(
-                f"{nome_conta} no balancete ({fmt(saldo_abs)}) diverge do total da seção {secao_usada} "
-                f"do resumo por acumulador ({fmt(total)}) além da tolerância de {int(TOLERANCIA_PCT*100)}% "
-                f"(comparação por total da seção, sem filtro de CFOP)."
-            ),
-        )
-    return dict(
-        codigo=codigo_passo, status="ok",
-        observacao=(
-            f"{nome_conta} ({fmt(saldo_abs)}) compatível com o total da seção {secao_usada} "
-            f"({fmt(total)}) dentro da tolerância de {int(TOLERANCIA_PCT*100)}%."
-        ),
-    )
+    status = "divergencia" if diff > tolerancia else "ok"
+    observacao = f"{conta_txt}: divergência de valor." if status == "divergencia" else f"{conta_txt} confere."
+    return dict(codigo=codigo_passo, status=status, observacao=observacao, valorFiscal=total, valorContabil=saldo_abs)
 
 
 def regra_estrutura_balanco(con):
@@ -167,16 +162,19 @@ def main():
     # A17 tem regra propria (capital_social_existe) - reaproveita a mesma checagem "importado"
 
     forn = pc.conta(pc.FORNECEDORES_NAC)
-    saidas.append(regra_comparacao_secao(con, "A07", forn["saldo_atual_signed"], "Fornecedores", ["ENTRADAS"]))
+    saidas.append(regra_comparacao_secao(con, "A07", pc.FORNECEDORES_NAC, forn["saldo_atual_signed"], "Fornecedores", ["ENTRADAS"]))
 
     estoque = pc.conta(pc.ESTOQUE)
-    saidas.append(regra_comparacao_secao(con, "A08", estoque["saldo_atual_signed"], "Estoque/Mercadorias", ["ENTRADAS"]))
+    saidas.append(regra_comparacao_secao(con, "A08", pc.ESTOQUE, estoque["saldo_atual_signed"], "Estoque/Mercadorias", ["ENTRADAS"]))
 
     receita = pc.conta(pc.RECEITA_BRUTA)
-    resultado_receita = regra_comparacao_secao(con, "A09", receita["saldo_atual_signed"], "Receita Bruta", ["SERVIÇOS", "SAÍDAS"])
+    resultado_receita = regra_comparacao_secao(con, "A09", pc.RECEITA_BRUTA, receita["saldo_atual_signed"], "Receita Bruta", ["SERVIÇOS", "SAÍDAS"])
     saidas.append(resultado_receita)
     # A23 pergunta a mesma coisa que A09 no texto do procedimento - aplica o mesmo veredito
-    saidas.append(dict(codigo="A23", status=resultado_receita["status"], observacao=resultado_receita["observacao"]))
+    saidas.append(dict(
+        codigo="A23", status=resultado_receita["status"], observacao=resultado_receita["observacao"],
+        valorFiscal=resultado_receita.get("valorFiscal"), valorContabil=resultado_receita.get("valorContabil"),
+    ))
 
     saidas.append(regra_estrutura_balanco(con))
 

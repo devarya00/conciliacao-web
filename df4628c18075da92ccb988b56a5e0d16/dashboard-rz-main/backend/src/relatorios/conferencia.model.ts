@@ -16,6 +16,9 @@ export interface ConferenciaItem {
   passo: ConferenciaPasso;
   status: ConferenciaStatus;
   observacao: string | null;
+  /** Preenchidos só nas regras de comparação numérica (Fornecedores/Estoque/Receita x resumo). */
+  valorFiscal: number | null;
+  valorContabil: number | null;
   sugeridoAutomatico: boolean;
   atualizadoPor: number | null;
   atualizadoEm: string;

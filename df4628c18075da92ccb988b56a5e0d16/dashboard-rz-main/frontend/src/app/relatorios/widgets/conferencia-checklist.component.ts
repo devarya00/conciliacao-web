@@ -47,12 +47,27 @@ export class ConferenciaChecklistComponent implements OnChanges {
     });
   }
 
+  /** Itens com valor calculado (contábil sempre; fiscal só quando há contrapartida no resumo) - tabela compacta, à parte. */
+  comparacoes(): ConferenciaItem[] {
+    return this.conferencia?.itens.filter((i) => i.valorContabil !== null) ?? [];
+  }
+
+  diferenca(item: ConferenciaItem): number | null {
+    if (item.valorFiscal === null || item.valorContabil === null) return null;
+    return item.valorFiscal - item.valorContabil;
+  }
+
+  temDivergenciaNumerica(item: ConferenciaItem): boolean {
+    const d = this.diferenca(item);
+    return d !== null && Math.abs(d) > 0.01;
+  }
+
   grupoA(): ConferenciaItem[] {
-    return this.conferencia?.itens.filter((i) => i.passo.grupo === 'A') ?? [];
+    return this.conferencia?.itens.filter((i) => i.passo.grupo === 'A' && i.valorContabil === null) ?? [];
   }
 
   grupoB(): ConferenciaItem[] {
-    return this.conferencia?.itens.filter((i) => i.passo.grupo === 'B') ?? [];
+    return this.conferencia?.itens.filter((i) => i.passo.grupo === 'B' && i.valorContabil === null) ?? [];
   }
 
   rotulo(status: ConferenciaStatus): string {

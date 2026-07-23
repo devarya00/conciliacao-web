@@ -16,6 +16,42 @@
       automatizável desta versão) e já vem marcado como "Não verificável".
     </p>
 
+    <table class="tabela-comparacao" *ngIf="comparacoes().length">
+      <thead>
+        <tr>
+          <th>Regra</th>
+          <th>Status</th>
+          <th>Descrição</th>
+          <th class="num">Vlr Fiscal</th>
+          <th class="num">Vlr Contábil</th>
+          <th class="num">Diferença</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <ng-container *ngFor="let item of comparacoes()">
+          <tr>
+            <td class="mono">{{ item.passo.codigo }}</td>
+            <td>
+              <span class="badge-comp" [class.critico]="item.status === 'divergencia'">
+                {{ item.status === 'divergencia' ? 'CRÍTICO' : 'OK' }}
+              </span>
+            </td>
+            <td>{{ item.passo.titulo }}</td>
+            <td class="num">{{ item.valorFiscal !== null ? (item.valorFiscal | number: '1.2-2') : '—' }}</td>
+            <td class="num">{{ item.valorContabil !== null ? (item.valorContabil | number: '1.2-2') : '—' }}</td>
+            <td class="num" [class.critico-texto]="temDivergenciaNumerica(item)">
+              {{ diferenca(item) !== null ? (diferenca(item) | number: '1.2-2') : '—' }}
+            </td>
+            <td><button type="button" class="corrigir" *ngIf="!editando[item.passo.id]" (click)="iniciarEdicao(item)">Corrigir</button></td>
+          </tr>
+          <tr *ngIf="editando[item.passo.id]">
+            <td colspan="7"><ng-container *ngTemplateOutlet="edicaoTpl; context: { item: item }"></ng-container></td>
+          </tr>
+        </ng-container>
+      </tbody>
+    </table>
+
     <div class="acoes">
       <button type="button" (click)="baixarPdf()">Baixar Relatório de Conferência (PDF)</button>
       <button
@@ -60,21 +96,27 @@
       <pre>{{ item.passo.descricao }}</pre>
     </details>
 
-    <div class="edicao" *ngIf="editando[item.passo.id]">
-      <select [(ngModel)]="rascunho[item.passo.id].status">
-        <option value="ok">OK</option>
-        <option value="divergencia">Divergência</option>
-        <option value="nao_verificavel">Não verificável</option>
-        <option value="pendente">Pendente</option>
-      </select>
-      <textarea
-        [(ngModel)]="rascunho[item.passo.id].observacao"
-        placeholder="Observação (obrigatória se divergência)"
-      ></textarea>
-      <div class="edicao-acoes">
-        <button type="button" [disabled]="precisaObservacao(item.passo.id)" (click)="salvarEdicao(item)">Salvar</button>
-        <button type="button" (click)="cancelarEdicao(item)">Cancelar</button>
-      </div>
+    <ng-container *ngIf="editando[item.passo.id]">
+      <ng-container *ngTemplateOutlet="edicaoTpl; context: { item: item }"></ng-container>
+    </ng-container>
+  </div>
+</ng-template>
+
+<ng-template #edicaoTpl let-item="item">
+  <div class="edicao">
+    <select [(ngModel)]="rascunho[item.passo.id].status">
+      <option value="ok">OK</option>
+      <option value="divergencia">Divergência</option>
+      <option value="nao_verificavel">Não verificável</option>
+      <option value="pendente">Pendente</option>
+    </select>
+    <textarea
+      [(ngModel)]="rascunho[item.passo.id].observacao"
+      placeholder="Observação (obrigatória se divergência)"
+    ></textarea>
+    <div class="edicao-acoes">
+      <button type="button" [disabled]="precisaObservacao(item.passo.id)" (click)="salvarEdicao(item)">Salvar</button>
+      <button type="button" (click)="cancelarEdicao(item)">Cancelar</button>
     </div>
   </div>
 </ng-template>

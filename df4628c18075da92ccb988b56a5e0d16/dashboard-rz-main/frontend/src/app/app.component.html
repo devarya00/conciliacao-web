@@ -16,7 +16,6 @@
           Revisão
           <span class="badge" *ngIf="pendentesRevisao > 0">{{ pendentesRevisao }}</span>
         </button>
-        <button [class.ativa]="aba === 'relatorios'" (click)="selecionarAba('relatorios')">Gerador de relatórios</button>
         <button [class.ativa]="aba === 'usuarios'" (click)="selecionarAba('usuarios')">Contas</button>
         <span class="spacer"></span>
         <span class="usuario">{{ auth.usuario?.email }}</span>
@@ -28,18 +27,18 @@
       <app-arquivos-page *ngIf="aba === 'arquivos'"></app-arquivos-page>
       <app-config-page *ngIf="aba === 'config'"></app-config-page>
       <app-review-queue-page *ngIf="aba === 'revisao'"></app-review-queue-page>
-      <app-relatorios-page *ngIf="aba === 'relatorios'"></app-relatorios-page>
       <app-usuarios-page *ngIf="aba === 'usuarios'"></app-usuarios-page>
     </ng-container>
 
+    <!-- role "user" hoje não tem mais nenhuma tela própria (o gerador de
+         relatórios, único destino dela, foi removido) -->
     <ng-template #soRelatorios>
       <nav class="abas">
-        <button class="ativa">Gerador de relatórios</button>
         <span class="spacer"></span>
         <span class="usuario">{{ auth.usuario?.email }}</span>
         <button class="sair" (click)="sair()">Sair</button>
       </nav>
-      <app-relatorios-page></app-relatorios-page>
+      <p style="padding: 24px">Sua conta não tem acesso a nenhuma tela deste sistema. Fale com um administrador.</p>
     </ng-template>
   </ng-template>
 </ng-template>

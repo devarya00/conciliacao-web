@@ -74,37 +74,10 @@ npm run user:create -- email@dominio.com "senha" admin   # role: admin | user (d
 ```
 
 Só a role `admin` acessa o BI (`/api/dashboard/*`, `/api/ingestion/*`); `user` recebe 403 nessas
-rotas. O gerador de relatório gerencial (`/api/relatorios/*`, PDFs Domínio -> xlsx) fica aberto a
-qualquer usuário autenticado — é a ferramenta do funcionário. `/api/auth/login` é a única rota
-pública. Token expira em `JWT_EXPIRES_IN` (padrão 8h); configure `JWT_SECRET` em produção (`.env` /
-`docker-compose.yml`).
-
-## Gerador de relatório gerencial
-
-`POST /api/relatorios` (multipart: `nomeEmpresa`, `balancete` e `resumo`, os dois PDFs do Domínio)
-roda `extract_pdfs.py` + `gen_xlsx.py` (`backend/src/relatorios/scripts/`) e devolve o job já
-concluído com o xlsx pronto — sem fila, processamento é síncrono no próprio request. `GET
-/api/relatorios` lista o histórico; `GET /api/relatorios/:id/download` baixa o xlsx; `DELETE
-/api/relatorios/:id` remove o job e os arquivos. Requer `python3` + `pdfplumber`/`openpyxl` na
-imagem (já no `Dockerfile`; fora de container, `pip install -r
-backend/src/relatorios/scripts/requirements.txt`).
-
-Universal entre empresas (testado com 2 empresas reais de estruturas bem diferentes):
-
-- `extract_pdfs.py` já lia nome/CNPJ/período direto do PDF. Também lida com balancete exportado
-  como **vários meses concatenados no mesmo PDF** (uma seção "Período: X-Y" por mês) — usa só a
-  última seção (posição atual da empresa); os meses anteriores já estão embutidos no saldo
-  anterior dela.
-- `gen_xlsx.py` resolve toda conta do DRE/Balanço/Fornecedores pelo **nome** no plano de contas
-  (`ATIVO CIRCULANTE`, `RECEITA BRUTA DE VENDAS E SERVIÇOS` etc. — plano de contas referencial
-  padrão do Domínio), não por código numérico fixo (código varia de empresa pra empresa, nome não).
-  Só `ATIVO` e `PASSIVO` (nível 1) são obrigatórias — sem elas o PDF nem é um balancete válido, e o
-  job termina com `status: erro` + `erro_msg` dizendo qual conta faltou. Toda outra conta é
-  opcional: se a empresa não movimentou ela naquele período (Domínio não imprime linha zerada) ou
-  não tem aquele grupo (ex.: Passivo Não Circulante, Veículos), a linha some ou vira 0 em vez de
-  quebrar o relatório. A aba Fiscal lista os acumuladores que existirem no resumo dessa empresa, sem
-  lista fixa. A aba Verificações continua conferindo a integridade dos números — se sobrar uma diferença real
-  (ex.: um resíduo entre DRE e variação patrimonial), aparece "ERRO" ali, não fica escondida.
+rotas e hoje não tem nenhuma tela própria no frontend (o gerador de relatório gerencial, único
+destino dela, foi removido — ver histórico do git se precisar recuperar). `/api/auth/login` é a
+única rota pública. Token expira em `JWT_EXPIRES_IN` (padrão 8h); configure `JWT_SECRET` em
+produção (`.env` / `docker-compose.yml`).
 
 ## Frontend
 

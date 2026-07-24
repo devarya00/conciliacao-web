@@ -9,7 +9,6 @@ import { ArquivosModule } from './arquivos/arquivos.module';
 import { ConfigModule } from './config/config.module';
 import { ReviewQueueModule } from './review-queue/review-queue.module';
 import { WorkmonitorModule } from './workmonitor/workmonitor.module';
-import { RelatoriosModule } from './relatorios/relatorios.module';
 import { AuthModule } from './auth/auth.module';
 import { AuthInterceptor } from './auth/data-access/auth.interceptor';
 import { UsuariosModule } from './usuarios/usuarios.module';
@@ -28,7 +27,6 @@ registerLocaleData(localePt);
     ConfigModule,
     ReviewQueueModule,
     WorkmonitorModule,
-    RelatoriosModule,
     UsuariosModule,
     ResetSenhaModule,
   ],

@@ -8,7 +8,7 @@ import { AuthService } from './auth/data-access/auth.service';
   styleUrls: ['./app.component.scss'],
 })
 export class AppComponent implements OnInit {
-  aba: 'dashboard' | 'workmonitor' | 'arquivos' | 'config' | 'revisao' | 'relatorios' | 'usuarios' = 'dashboard';
+  aba: 'dashboard' | 'workmonitor' | 'arquivos' | 'config' | 'revisao' | 'usuarios' = 'dashboard';
   pendentesRevisao = 0;
 
   /** ?reset=TOKEN na URL — tela de redefinição de senha é pública, sem router mesmo (link externo) */
@@ -22,12 +22,11 @@ export class AppComponent implements OnInit {
   ngOnInit(): void {
     this.auth.usuario$.subscribe((usuario) => {
       if (usuario?.role === 'admin') this.atualizarContagemRevisao();
-      else if (usuario) this.aba = 'relatorios';
     });
   }
 
   selecionarAba(
-    aba: 'dashboard' | 'workmonitor' | 'arquivos' | 'config' | 'revisao' | 'relatorios' | 'usuarios',
+    aba: 'dashboard' | 'workmonitor' | 'arquivos' | 'config' | 'revisao' | 'usuarios',
   ): void {
     this.aba = aba;
     if (aba === 'revisao') this.atualizarContagemRevisao();

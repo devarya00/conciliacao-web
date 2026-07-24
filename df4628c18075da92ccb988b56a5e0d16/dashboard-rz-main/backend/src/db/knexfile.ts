@@ -3,9 +3,12 @@ import type { Knex } from 'knex';
 
 // DATABASE_URL (Neon/qualquer Postgres gerenciado, exige SSL) tem prioridade;
 // sem ela, cai nas variáveis PG* discretas (Postgres local do docker-compose,
-// sem SSL).
+// sem SSL). rejectUnauthorized:true valida o certificado contra a CA
+// confiável padrão do Node — Neon (e a maioria dos gerenciados) usa cadeia
+// pública, então não precisa de CA customizada; sem isso, um MITM na rede
+// entre backend e banco passaria despercebido.
 const connection: Knex.PgConnectionConfig = process.env.DATABASE_URL
-  ? { connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } }
+  ? { connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: true } }
   : {
       host: process.env.PGHOST || 'localhost',
       port: Number(process.env.PGPORT) || 5432,

@@ -35,7 +35,11 @@ export class DashboardService {
       .whereRaw(`${DATA_MESTRE} BETWEEN ? AND ?`, [f.dataInicial, f.dataFinal]);
 
     if (f.departamento && f.departamento !== 'Todos') {
-      qb.andWhere({ departamento: f.departamento });
+      // Qualificado: ranking() faz join com v_colaborador (que tambem tem
+      // "departamento") depois desta base - sem o prefixo, vira "column
+      // reference departamento is ambiguous" (Postgres) e a query inteira
+      // falha com 500 assim que um departamento e' selecionado no filtro.
+      qb.andWhere({ 'fact_entrega.departamento': f.departamento });
     }
     if (f.somenteReinf) {
       qb.andWhere({ is_reinf: true });

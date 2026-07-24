@@ -5,6 +5,7 @@ import { normalizeEncoding, resolverNomeKeys } from '../../../common/text.util';
 export interface OnvioProdutividade {
   nome: string;
   nomeKey: string;
+  departamento: string | null;
   data: string;
   concluidos: number;
   iniciados: number;
@@ -13,27 +14,52 @@ export interface OnvioProdutividade {
   desconsiderados: number;
 }
 
-/** Departamentos conhecidos que aparecem colados ao nome (ver limparNomeDepartamento). */
+/** Departamentos conhecidos que aparecem colados ao nome (ver separarNomeDepartamento). */
 const DEPARTAMENTOS_CONHECIDOS = ['fiscal', 'pessoal', 'contabil', 'comercial', 'administrativo', 'societario', 'bpo'];
+
+/** Grafia canonica (igual ao rotulo usado no S3D/filtro do dashboard) por token reconhecido. */
+const ROTULO_DEPARTAMENTO: Record<string, string> = {
+  fiscal: 'Fiscal',
+  pessoal: 'Pessoal',
+  contabil: 'Contábil',
+  comercial: 'Comercial',
+  administrativo: 'Dep Administrativo',
+  societario: 'Societário',
+  bpo: 'BPO-Assertivo',
+};
 
 /**
  * "Nome" desta planilha vem sujo com o departamento: "Danielly - Pessoal",
  * "Diana - Fiscal/Contabil", "Maria Clara Fiscal/Contabil" (sem hifen!), ou
- * limpo mesmo: "Vitor Rezende". Remove o sufixo de departamento preservando
- * pelo menos os 2 primeiros tokens (nome/sobrenome).
+ * limpo mesmo: "Vitor Rezende". Separa o nome limpo (preservando pelo menos os
+ * 2 primeiros tokens) do rotulo de departamento - quando composto
+ * ("Fiscal/Contabil"), guarda só o primeiro como departamento primário (mesmo
+ * formato de rótulo único que fact_entrega/S3D já usa).
  */
-function limparNomeDepartamento(nomeBruto: string): string {
+function separarNomeDepartamento(nomeBruto: string): { nome: string; departamento: string | null } {
   const clean = normalizeEncoding(nomeBruto);
-  const [antesDoHifen] = clean.split(/\s+-\s+/);
-  if (antesDoHifen !== clean) return antesDoHifen.trim();
 
-  const tokens = clean.split(/\s+/);
-  const idxDepartamento = tokens.findIndex((t, i) => {
-    if (i < 2) return false;
-    return t.includes('/') || DEPARTAMENTOS_CONHECIDOS.some((d) => stripAccents(t.toLowerCase()).startsWith(d));
-  });
-  if (idxDepartamento === -1) return clean;
-  return tokens.slice(0, idxDepartamento).join(' ');
+  const [antesDoHifen, depoisDoHifen] = clean.split(/\s+-\s+/);
+  let nome: string;
+  let bruto: string | null;
+
+  if (antesDoHifen !== clean) {
+    nome = antesDoHifen.trim();
+    bruto = depoisDoHifen?.trim() ?? null;
+  } else {
+    const tokens = clean.split(/\s+/);
+    const idx = tokens.findIndex((t, i) => {
+      if (i < 2) return false;
+      return t.includes('/') || DEPARTAMENTOS_CONHECIDOS.some((d) => stripAccents(t.toLowerCase()).startsWith(d));
+    });
+    nome = idx === -1 ? clean : tokens.slice(0, idx).join(' ');
+    bruto = idx === -1 ? null : tokens.slice(idx).join(' ');
+  }
+
+  if (!bruto) return { nome, departamento: null };
+  const primeiroToken = bruto.split('/')[0].trim();
+  const chave = DEPARTAMENTOS_CONHECIDOS.find((d) => stripAccents(primeiroToken.toLowerCase()).startsWith(d));
+  return { nome, departamento: chave ? ROTULO_DEPARTAMENTO[chave] : primeiroToken };
 }
 
 /**
@@ -54,10 +80,11 @@ export function parseOnvioProdutividade(workbook: XLSX.WorkBook, nomeArquivo: st
     .map((row) => {
       const nomeBruto = pick(row, ['nome']);
       if (!nomeBruto) return null;
-      const nome = limparNomeDepartamento(nomeBruto);
+      const { nome, departamento } = separarNomeDepartamento(nomeBruto);
       nomes.push(nome);
       return {
         nome,
+        departamento,
         concluidos: toNumber(pick(row, ['concluidos'])) ?? 0,
         iniciados: toNumber(pick(row, ['iniciados'])) ?? 0,
         tempoMedioS: parseHms(pick(row, ['tempo medio'])),

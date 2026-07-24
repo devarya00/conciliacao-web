@@ -62,12 +62,19 @@ export class ArquivosController {
   ): Promise<ArquivoIngestao> {
     if (!file) throw new BadRequestException('Arquivo não enviado (campo "arquivo")');
 
-    return this.ingestaoService.ingerirArquivo({
+    const resultado = await this.ingestaoService.ingerirArquivo({
       nomeOriginal: file.originalname,
       caminhoArquivo: file.path,
       origem: body.origem,
       tamanhoBytes: file.size,
     });
+
+    // Sem isso, colaborador novo/fragmentado por este upload fica sem
+    // canonical_id ate alguem rodar roster:apply na mao - mesma lacuna do
+    // executar() (cron), so que no caminho manual da UI.
+    await this.ingestaoService.aplicarRosterCanonico();
+
+    return resultado;
   }
 
   @Delete(':id')

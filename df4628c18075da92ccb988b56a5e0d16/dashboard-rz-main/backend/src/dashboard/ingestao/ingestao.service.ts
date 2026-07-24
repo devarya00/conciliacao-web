@@ -302,6 +302,11 @@ export class IngestaoService {
         tamanhoBytes: statSync(caminho).size,
       });
     }
+
+    // Sem isso, colaborador novo/fragmentado ingerido pelo cron fica sem
+    // canonical_id ate alguem rodar roster:apply na mao - concluidos do
+    // ranking (agrupado por canonical_id) fica menor que o real ate la.
+    await this.aplicarRosterCanonico();
   }
 
   async listar(filtro: FiltroArquivos = {}): Promise<ArquivoIngestao[]> {
@@ -562,26 +567,41 @@ export class IngestaoService {
 
   private async upsertColaboradores(
     trx: Knex.Transaction,
-    linhas: { nome: string; nomeKey: string }[],
+    linhas: { nome: string; nomeKey: string; departamento?: string | null }[],
   ): Promise<Map<string, number>> {
     const mapaAtual = await this.mapaColaboradores(trx);
     const novos = new Map<string, string>();
     for (const l of linhas) {
       if (!mapaAtual.has(l.nomeKey)) novos.set(l.nomeKey, l.nome);
     }
-    if (novos.size === 0) return mapaAtual;
 
-    const entradas = [...novos.entries()].map(([nomeKey, nome]) => ({ nome, nome_key: nomeKey }));
     const atualizado = new Map(mapaAtual);
-    for (let i = 0; i < entradas.length; i += TAMANHO_LOTE) {
-      const lote = entradas.slice(i, i + TAMANHO_LOTE);
-      const inseridos = await trx('dim_colaborador')
-        .insert(lote)
-        .onConflict('nome_key')
-        .merge()
-        .returning(['id', 'nome_key']);
-      for (const row of inseridos) atualizado.set(row.nome_key, Number(row.id));
+    if (novos.size > 0) {
+      const entradas = [...novos.entries()].map(([nomeKey, nome]) => ({ nome, nome_key: nomeKey }));
+      for (let i = 0; i < entradas.length; i += TAMANHO_LOTE) {
+        const lote = entradas.slice(i, i + TAMANHO_LOTE);
+        const inseridos = await trx('dim_colaborador')
+          .insert(lote)
+          .onConflict('nome_key')
+          .merge()
+          .returning(['id', 'nome_key']);
+        for (const row of inseridos) atualizado.set(row.nome_key, Number(row.id));
+      }
     }
+
+    // Onvio produtividade traz o departamento colado no nome (unica fonte que
+    // sabe o departamento por pessoa - S3D/Workmonitor nao tem isso) - grava
+    // mesmo em colaborador ja existente (criado antes por outra origem sem
+    // essa info), corrigindo o filtro de departamento no ranking/workmonitor.
+    const departamentoPorNomeKey = new Map(
+      linhas.filter((l) => l.departamento).map((l) => [l.nomeKey, l.departamento as string]),
+    );
+    for (const [nomeKey, departamento] of departamentoPorNomeKey) {
+      const id = atualizado.get(nomeKey);
+      if (id === undefined) continue;
+      await trx('dim_colaborador').where({ id }).update({ departamento });
+    }
+
     return atualizado;
   }
 
